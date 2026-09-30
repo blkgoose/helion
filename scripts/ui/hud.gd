@@ -5,6 +5,7 @@ extends Control
 signal logout_pressed
 signal full_stop_pressed
 signal disengage_pressed
+signal manual_pressed
 
 const PHASE_LABELS := {
 	"idle": "",
@@ -22,6 +23,7 @@ var _fps_label: Label
 var _last_velocity: Variant = null
 var _last_ts := 0.0
 var _acc := Vector3.ZERO
+var _manual_button: Button
 var _pos := Vector3.ZERO
 var _vel := Vector3.ZERO
 var _ang := Vector3.ZERO
@@ -68,6 +70,11 @@ func _ready() -> void:
 	top_right.add_child(buttons)
 	buttons.add_child(logout)
 	logout.pressed.connect(func(): logout_pressed.emit())
+
+	_manual_button = Button.new()
+	_manual_button.text = "MANUALE [T]"
+	_manual_button.pressed.connect(func(): manual_pressed.emit())
+	buttons.add_child(_manual_button)
 
 	var stop := Button.new()
 	stop.text = "FULL STOP"
@@ -156,3 +163,7 @@ func notify(message: String) -> void:
 
 static func _row(label: String, v: Vector3, unit: String) -> String:
 	return "[color=#66ccff][b]%s[/b][/color]  %s  [color=#6f8396]%s[/color]" % [label, _fmt(v), unit]
+
+
+func set_manual_active(on: bool) -> void:
+	_manual_button.add_theme_color_override("font_color", Color("ffb347") if on else Color.WHITE)

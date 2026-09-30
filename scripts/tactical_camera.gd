@@ -17,6 +17,7 @@ const AUTO_ORIENT_LERP := 3.0
 
 var center := Vector3.ZERO
 var input_captured := false
+var pan_enabled := true
 ## 0..1 wind-like jitter, set by the scene from speed and proximity to the ship.
 var shake := 0.0
 
@@ -132,7 +133,7 @@ func _process(delta: float) -> void:
 
 
 func _pan(delta: float) -> void:
-	if input_captured or map_mode:
+	if input_captured or map_mode or not pan_enabled:
 		return
 	var amount := PAN_SPEED_AT_UNIT_DISTANCE * _distance * delta
 	var moved := false

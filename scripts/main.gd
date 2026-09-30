@@ -30,6 +30,8 @@ var _modules: Array = []
 var _active_goal := {}
 var _pending_resume: Variant = null
 var _game_started := false
+var _manual := ManualControl.new()
+var _manual_panel: ManualPanel
 var _hovered := {}
 var _snap := {}
 
@@ -40,6 +42,7 @@ func _ready() -> void:
 	add_child(_scene)
 	add_child(_radar)
 	add_child(_system_map)
+	add_child(_manual)
 
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -87,6 +90,13 @@ func _ready() -> void:
 
 	_modal = ModulesModal.new()
 	_ui_root.add_child(_modal)
+	_manual_panel = ManualPanel.new(_manual)
+	_ui_root.add_child(_manual_panel)
+	_manual_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 24)
+	_manual_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_manual_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_hud.manual_pressed.connect(_toggle_manual)
+	_manual.changed.connect(func(): _scene.camera.pan_enabled = not _manual.active)
 	_palette = CommandPalette.new(_build_palette_root)
 	_ui_root.add_child(_palette)
 
@@ -110,6 +120,8 @@ func _set_game_ui_visible(value: bool) -> void:
 	_login.visible = not value
 	if not value:
 		_universe_map.visible = false
+		_manual.set_active(false)
+		_hud.set_manual_active(false)
 
 
 func _start_game() -> void:
@@ -151,6 +163,9 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _game_started or InputState.captured:
 		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_T and not event.ctrl_pressed:
+		_toggle_manual()
+		return
 	if event is InputEventMouseMotion:
 		_hovered = _scene.pick((event as InputEventMouseMotion).position)
 		_scene.show_hover(_hovered)
@@ -179,6 +194,7 @@ func _on_state(entity: Dictionary) -> void:
 	_modules = modules
 	_modal.set_modules(modules)
 	_autopilot.set_modules(modules, entity)
+	_manual.set_modules(modules, entity)
 
 	_scene.camera.set_ship_position(Vector3.ZERO)
 	var aim: Variant = null
@@ -394,7 +410,18 @@ func _resolve_goal(goal: Dictionary) -> Dictionary:
 			}
 
 
+func _toggle_manual() -> void:
+	var on := not _manual.active
+	if on and (_autopilot.is_engaged()):
+		_disengage()
+	_manual.set_active(on)
+	_hud.set_manual_active(on)
+
+
 func _engage(goal: Dictionary) -> void:
+	if _manual.active:
+		_manual.set_active(false)
+		_hud.set_manual_active(false)
 	_autopilot.set_modules(_modules, ShipState.latest)
 	if goal.kind == "stop":
 		_autopilot.engage_stop()
