@@ -98,10 +98,10 @@ func _process(delta: float) -> void:
 	var ctrl := Input.is_key_pressed(KEY_CTRL)
 	for k in [KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E, KEY_K, KEY_J]:
 		keys_down[k] = Input.is_key_pressed(k) and not ctrl
-	# The server's "yaw" variable moves the nose up/down on this ship, "pitch" sideways, so W/S drive "yaw" and A/D "pitch".
+	# The server's "yaw" variable moves the nose up/down on this ship, "pitch" sideways, so A/D drive "yaw" and W/S "pitch".
 	axes = {
-		"yaw": (float(keys_down[KEY_W]) - float(keys_down[KEY_S])) * RCS_PCT,
-		"pitch": (float(keys_down[KEY_A]) - float(keys_down[KEY_D])) * RCS_PCT,
+		"yaw": (float(keys_down[KEY_A]) - float(keys_down[KEY_D])) * RCS_PCT,
+		"pitch": (float(keys_down[KEY_S]) - float(keys_down[KEY_W])) * RCS_PCT,
 		"roll": (float(keys_down[KEY_E]) - float(keys_down[KEY_Q])) * RCS_PCT,
 	}
 	if stabilize:
