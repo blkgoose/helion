@@ -133,6 +133,8 @@ func _build_near(kind: String, is_star: bool, real_radius: float, model_kind: St
 	if not is_star:
 		var model := Models.spawn(model_kind, real_radius)
 		if model != null:
+			if kind == "planet":
+				_add_atmosphere(model, 1.0)
 			return model
 	# DoubleSide: "arrived" only needs distance-to-surface under the arrival radius, so the camera
 	# can already be inside the sphere, and default backface culling would make it vanish.
@@ -149,6 +151,8 @@ func _build_near(kind: String, is_star: bool, real_radius: float, model_kind: St
 	var instance := MeshInstance3D.new()
 	instance.mesh = mesh
 	instance.material_override = material
+	if kind == "planet":
+		_add_atmosphere(instance, real_radius)
 	instance.set_meta("fallback", true)
 	return instance
 
@@ -157,6 +161,8 @@ func _build_proxy(is_star: bool, model_kind: String) -> Node3D:
 	if not is_star:
 		var model := Models.spawn(model_kind, 1.0)
 		if model != null:
+			if model_kind == "planet":
+				_add_atmosphere(model, 1.0)
 			return model
 	var instance := MeshInstance3D.new()
 	var material := StandardMaterial3D.new()
@@ -185,3 +191,37 @@ func _build_proxy(is_star: bool, model_kind: String) -> Node3D:
 	instance.material_override = material
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return instance
+
+
+const ATMOSPHERE_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_add, cull_back, depth_draw_never;
+uniform vec4 tint : source_color = vec4(0.45, 0.7, 1.0, 1.0);
+uniform float strength = 1.6;
+void fragment() {
+	float rim = 1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
+	float a = pow(rim, 2.5) * strength;
+	ALBEDO = tint.rgb * a;
+	ALPHA = clamp(a, 0.0, 1.0);
+}
+"""
+
+static var _atmosphere_material: ShaderMaterial
+
+
+func _add_atmosphere(node: Node3D, radius: float) -> void:
+	if _atmosphere_material == null:
+		var shader := Shader.new()
+		shader.code = ATMOSPHERE_SHADER
+		_atmosphere_material = ShaderMaterial.new()
+		_atmosphere_material.shader = shader
+	var mesh := SphereMesh.new()
+	mesh.radius = radius * 1.07
+	mesh.height = radius * 2.14
+	mesh.radial_segments = 48
+	mesh.rings = 24
+	var shell := MeshInstance3D.new()
+	shell.mesh = mesh
+	shell.material_override = _atmosphere_material
+	shell.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.add_child(shell)
