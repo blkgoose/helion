@@ -48,6 +48,8 @@ func update_markers(camera: Camera3D, entries: Array) -> void:
 			x = cos(angle) * EDGE_MARGIN
 			y = sin(angle) * EDGE_MARGIN
 		var text := "%s %s" % [entry.icon, IonMath.format_distance_short(entry.distance_m)]
+		if entry.has("text"):
+			text = entry.text
 		if offscreen:
 			text = ("▶ " if x >= 0.0 else "◀ ") + text
 		label.text = text

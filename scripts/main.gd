@@ -282,6 +282,10 @@ func _render_frame() -> void:
 		marker_entries.append({"icon": "☉" if p.kind == "star" else "●", "world_position": p.position, "distance_m": p.distance_m})
 	for c in nearest.slice(0, DIRECTION_MARKER_CONTACT_LIMIT):
 		marker_entries.append({"icon": IonMath.contact_icon(c.kind), "world_position": c.position, "distance_m": c.distance_m})
+	var own_size = ShipRead.size(ShipState.latest)
+	if _scene.camera.position.length() > maxf(120.0, (own_size if own_size != null else 30.0) * 4.0):
+		var sector: Dictionary = ship_position.sector
+		marker_entries.append({"icon": "▲", "world_position": Vector3.ZERO, "distance_m": 0.0, "text": "▲ Tu — settore %d / %d / %d" % [sector.x, sector.y, sector.z]})
 	_markers.update_markers(_scene.camera, marker_entries)
 
 
