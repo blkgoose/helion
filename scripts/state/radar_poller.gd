@@ -4,7 +4,7 @@ extends Node
 ## from GET), so a slow deep scanner is never polled into "cooldown" errors.
 ## Contacts: [entity_id, position, size (diameter), kind, velocity, orientation].
 
-const FALLBACK_INTERVAL_S := 1.0
+const FALLBACK_INTERVAL_S := 1.0 / 15.0
 const ERROR_BACKOFF_MS := 500.0
 # Beyond this a scan is too stale to trust linear extrapolation (e.g. after a stalled frame).
 const MAX_EXTRAPOLATION_S := 3.0
