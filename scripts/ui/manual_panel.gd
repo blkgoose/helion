@@ -7,6 +7,7 @@ var _caps := {}
 var _thrust_label: Label
 var _rcs_toggle: CheckButton
 var _main_toggle: CheckButton
+var _stab_toggle: CheckButton
 
 
 func _init(manual: ManualControl) -> void:
@@ -36,7 +37,12 @@ func _ready() -> void:
 	_main_toggle.button_pressed = _manual.main_enabled
 	_main_toggle.toggled.connect(_manual.set_main_enabled)
 	toggles.add_child(_main_toggle)
-	for toggle in [_rcs_toggle, _main_toggle]:
+	_stab_toggle = CheckButton.new()
+	_stab_toggle.text = "AUTO-STAB"
+	_stab_toggle.button_pressed = _manual.stabilize
+	_stab_toggle.toggled.connect(_manual.set_stabilize)
+	toggles.add_child(_stab_toggle)
+	for toggle in [_rcs_toggle, _main_toggle, _stab_toggle]:
 		toggle.focus_mode = Control.FOCUS_NONE
 
 	var row := HBoxContainer.new()

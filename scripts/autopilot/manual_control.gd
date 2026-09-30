@@ -8,22 +8,57 @@ signal changed
 const RCS_PCT := 50.0
 const THRUST_RATE_PCT_S := 60.0
 const SEND_INTERVAL_MS := 66.0
+const STAB_TIME_S := 0.4
+const STAB_DEADBAND_DEG_S := 0.3
+const GAIN_LEARN_MIN_CMD := 5.0
+const GAIN_EMA := 0.3
 
 var active := false
 var rcs_enabled := true
 var main_enabled := true
+var stabilize := true
 var thrust_pct := 0.0
 var axes := {"yaw": 0.0, "pitch": 0.0, "roll": 0.0}
 var keys_down := {}
 
 var _thrusters := ShipRead.classify_thrusters(null, [])
 var _sent := {}
+var _rates := {"yaw": 0.0, "pitch": 0.0, "roll": 0.0}
+var _rate_at_ms := 0.0
+var _gains := {}
+var _learn_prev := {}
 var _in_flight := false
 var _last_send_ms := 0.0
 
 
 func set_modules(modules: Array, entity: Variant) -> void:
 	_thrusters = ShipRead.classify_thrusters(entity, modules)
+	var cached: Variant = Persist.get_value("calibration")
+	if cached is Dictionary and cached.get("gains") is Dictionary:
+		for axis in Attitude.RCS_AXES:
+			if cached.gains.get(axis) != null and not _gains.has(axis):
+				_gains[axis] = float(cached.gains[axis])
+
+
+## Body rates in deg/s, same axis mapping as the autopilot; also refines the per-axis command gain
+## (deg/s^2 per %, signed) from how the ship actually responds to the commands we sent.
+func update_state(entity: Dictionary) -> void:
+	var angular: Variant = ShipRead.angular_velocity(entity)
+	if angular == null:
+		return
+	var now := Time.get_ticks_msec()
+	var rates := {"yaw": angular.z * 57.29578, "pitch": angular.y * 57.29578, "roll": angular.x * 57.29578}
+	var dt := (now - _rate_at_ms) / 1000.0
+	if _rate_at_ms > 0.0 and dt > 0.02 and dt < 0.5:
+		for axis in Attitude.RCS_AXES:
+			var prev: Variant = _learn_prev.get(axis)
+			if prev != null and absf(prev) >= GAIN_LEARN_MIN_CMD:
+				var g: float = (rates[axis] - _rates[axis]) / dt / prev
+				if absf(g) > 0.001:
+					_gains[axis] = lerpf(_gains.get(axis, g), g, GAIN_EMA)
+	_rates = rates
+	_rate_at_ms = now
+	_learn_prev = axes.duplicate()
 
 
 func set_active(value: bool) -> void:
@@ -39,6 +74,11 @@ func set_rcs_enabled(value: bool) -> void:
 	if rcs_enabled and not value and active:
 		_zero_group("rcs")
 	rcs_enabled = value
+	changed.emit()
+
+
+func set_stabilize(value: bool) -> void:
+	stabilize = value
 	changed.emit()
 
 
@@ -64,6 +104,14 @@ func _process(delta: float) -> void:
 		"pitch": (float(keys_down[KEY_A]) - float(keys_down[KEY_D])) * RCS_PCT,
 		"roll": (float(keys_down[KEY_E]) - float(keys_down[KEY_Q])) * RCS_PCT,
 	}
+	if stabilize:
+		for axis in Attitude.RCS_AXES:
+			if absf(axes[axis]) > 0.0:
+				continue
+			var rate: float = _rates[axis]
+			var gain: float = _gains.get(axis, 1.0)
+			if absf(rate) > STAB_DEADBAND_DEG_S and absf(gain) > 0.001:
+				axes[axis] = clampf(-rate / STAB_TIME_S / gain, -100.0, 100.0)
 	if main_enabled:
 		thrust_pct = clampf(thrust_pct + (float(keys_down[KEY_K]) - float(keys_down[KEY_J])) * THRUST_RATE_PCT_S * delta, 0.0, 100.0)
 	_send()

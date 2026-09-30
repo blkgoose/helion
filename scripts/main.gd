@@ -199,6 +199,7 @@ func _on_state(entity: Dictionary) -> void:
 	_modal.set_modules(modules)
 	_autopilot.set_modules(modules, entity)
 	_manual.set_modules(modules, entity)
+	_manual.update_state(entity)
 
 	_scene.camera.set_ship_position(Vector3.ZERO)
 	var aim: Variant = null
