@@ -40,7 +40,7 @@ func _ready() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(body)
 	_list = ItemList.new()
-	_list.custom_minimum_size = Vector2(300, 0)
+	_list.custom_minimum_size = Vector2(320, 0)
 	_list.item_selected.connect(_on_module_selected)
 	body.add_child(_list)
 	var scroll := ScrollContainer.new()
@@ -127,7 +127,8 @@ func _render_list() -> void:
 	_list.clear()
 	var selected_index := -1
 	for i in _listed.size():
-		_list.add_item("%s  [%s]" % [_listed[i].module_id, _listed[i].type])
+		_list.add_item("%s  %s" % [_listed[i].type, str(_listed[i].module_id).substr(0, 8)])
+		_list.set_item_tooltip(i, _listed[i].module_id)
 		if _listed[i].module_id == _selected:
 			selected_index = i
 	if selected_index < 0:
