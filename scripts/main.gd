@@ -84,7 +84,7 @@ func _build_login() -> void:
 	var env_url := OS.get_environment("ION_SERVER_URL")
 	_add_field(box, "server", "Server", env_url if env_url != "" else IonClient.server_url, false)
 	_add_field(box, "ship", "Ship ID", "", false)
-	_add_field(box, "component", "Component", "", false)
+	_add_field(box, "component", "Component", "core", false)
 	_add_field(box, "password", "Password", "", true)
 
 	var button := Button.new()
@@ -104,8 +104,32 @@ func _add_field(parent: Control, key: String, label_text: String, value: String,
 	edit.text = value
 	edit.secret = secret
 	edit.text_submitted.connect(func(_t): _on_login_pressed())
+	if key != "server":
+		edit.text_changed.connect(_on_credential_text_changed)
 	parent.add_child(edit)
 	_fields[key] = edit
+
+
+## Parses a pasted "LOGIN id component pass" (LOGIN keyword optional) into its three fields.
+static func parse_login_string(text: String) -> PackedStringArray:
+	var normalized := text.replace("\t", " ").replace("\n", " ").replace("\r", " ")
+	var tokens := normalized.split(" ", false)
+	if not tokens.is_empty() and tokens[0].to_upper() == "LOGIN":
+		tokens.remove_at(0)
+	if tokens.size() != 3:
+		return PackedStringArray()
+	return tokens
+
+
+## A paste into any credential field that looks like a login string fills all three and connects.
+func _on_credential_text_changed(text: String) -> void:
+	var parsed := parse_login_string(text)
+	if parsed.is_empty():
+		return
+	_fields.ship.text = parsed[0]
+	_fields.component.text = parsed[1]
+	_fields.password.text = parsed[2]
+	_on_login_pressed()
 
 
 func _show_login(message: String) -> void:
