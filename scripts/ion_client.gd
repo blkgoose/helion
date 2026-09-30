@@ -8,6 +8,7 @@ const DISCONNECT_THRESHOLD := 3
 
 var server_url: String = "http://192.168.1.4:3001/api/v1"
 var token: String = ""
+var ship_id: String = ""
 
 var _consecutive_failures := 0
 
@@ -16,10 +17,11 @@ func is_logged_in() -> bool:
 	return token != ""
 
 
-func login(ship_id: String, component: String, password: String) -> Dictionary:
-	var result := await _send("LOGIN %s %s %s" % [ship_id, component, password], false)
+func login(id: String, component: String, password: String) -> Dictionary:
+	var result := await _send("LOGIN %s %s %s" % [id, component, password], false)
 	if result.ok:
 		token = result.data
+		ship_id = id
 		_consecutive_failures = 0
 	return result
 

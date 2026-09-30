@@ -114,7 +114,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_fps_label.text = "FPS %d" % Engine.get_frames_per_second()
-	_status_label.text = "%s\n%s\n%s\n%s" % [_row("POS", _pos, ""), _row("VEL", _vel, "m/s"), _row("ACC", _acc, "m/s²"), _row("ANG", _ang, "°/s")]
+	_status_label.text = "%s\n%s\n%s" % [_row("VEL", _vel, "m/s"), _row("ACC", _acc, "m/s²"), _row("ANG", _ang, "°/s")]
 
 
 static func _fmt(v: Vector3) -> String:
