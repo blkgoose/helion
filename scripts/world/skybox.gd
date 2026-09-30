@@ -5,7 +5,7 @@ extends Node3D
 
 const STAR_COUNT := 4000
 const SKY_RADIUS := 95000.0
-const STAR_OPACITY := 0.14
+const STAR_OPACITY := 0.07
 const GALAXY_DIRECTION := Vector3(0.4, 0.22, 0.89)
 
 
