@@ -4,7 +4,7 @@ extends Node3D
 ## translate with the camera, never rotate, so turning is visible even with nothing else in view.
 
 const STAR_COUNT := 3000
-const STAR_RADIUS_M := 4500.0
+const STAR_RADIUS_M := 90000.0
 const RING_RADIUS_M := 3000.0
 const RING_SEGMENTS := 128
 

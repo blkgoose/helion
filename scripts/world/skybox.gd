@@ -4,7 +4,7 @@ extends Node3D
 ## plus one faint galaxy smudge for depth. Recentered on the camera so it reads as infinitely far.
 
 const STAR_COUNT := 4000
-const SKY_RADIUS := 50000.0
+const SKY_RADIUS := 95000.0
 const STAR_OPACITY := 0.35
 const GALAXY_DIRECTION := Vector3(0.4, 0.22, 0.89)
 

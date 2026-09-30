@@ -151,9 +151,9 @@ func _build_near(kind: String, is_star: bool, real_radius: float, model_kind: St
 func _build_proxy(is_star: bool) -> Node3D:
 	var instance := MeshInstance3D.new()
 	var material := StandardMaterial3D.new()
-	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-	material.render_priority = -1
 	if is_star:
+		material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		material.render_priority = -1
 		var quad := QuadMesh.new()
 		quad.size = Vector2.ONE
 		instance.mesh = quad
