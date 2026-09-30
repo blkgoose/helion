@@ -13,6 +13,8 @@ var starfield: Starfield
 
 var _skybox: Skybox
 var _cage: OrientationCage
+var _dust: DustField
+var _last_ship: Dictionary = {}
 var _own_ship: ShipVisual
 var _own_light: OmniLight3D
 var _contacts := {}
@@ -90,6 +92,8 @@ func _ready() -> void:
 	add_child(_cage)
 	_skybox = Skybox.new()
 	add_child(_skybox)
+	_dust = DustField.new()
+	add_child(_dust)
 	starfield = Starfield.new()
 	add_child(starfield)
 
@@ -121,6 +125,13 @@ func _process(_delta: float) -> void:
 	_own_ship.upgrade()
 	for contact in _contacts.values():
 		contact.visual.upgrade()
+
+
+## Called every frame with the ship floating position.
+func advance_dust(ship_position: Dictionary) -> void:
+	if not _last_ship.is_empty():
+		_dust.advance(IonMath.to_vec3(IonMath.relative(_last_ship, ship_position)), camera.position)
+	_last_ship = ship_position
 
 
 func set_own_ship_orientation(orientation: Quaternion) -> void:

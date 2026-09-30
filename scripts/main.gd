@@ -257,6 +257,7 @@ func _render_frame() -> void:
 			orientation = ((orientation as Quaternion) * Quaternion(w.normalized(), w.length() * dt)).normalized()
 		_scene.set_own_ship_orientation(orientation)
 
+	_scene.advance_dust(ship_position)
 	var entries := _system_map.latest
 	var contacts := _radar.get_predicted(IonMath.now_ms())
 	_scene.starfield.update(ship_position, entries)

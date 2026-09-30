@@ -195,12 +195,12 @@ func _build_proxy(is_star: bool, model_kind: String) -> Node3D:
 
 const ATMOSPHERE_SHADER := """
 shader_type spatial;
-render_mode unshaded, blend_add, cull_back, depth_draw_never;
+render_mode unshaded, blend_add, cull_front, depth_draw_never;
 uniform vec4 tint : source_color = vec4(0.45, 0.7, 1.0, 1.0);
-uniform float strength = 1.6;
+uniform float strength = 0.35;
 void fragment() {
-	float rim = 1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
-	float a = pow(rim, 2.5) * strength;
+	float rim = clamp(dot(-normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
+	float a = pow(rim, 2.0) * strength;
 	ALBEDO = tint.rgb * a;
 	ALPHA = clamp(a, 0.0, 1.0);
 }
@@ -216,8 +216,8 @@ func _add_atmosphere(node: Node3D, radius: float) -> void:
 		_atmosphere_material = ShaderMaterial.new()
 		_atmosphere_material.shader = shader
 	var mesh := SphereMesh.new()
-	mesh.radius = radius * 1.07
-	mesh.height = radius * 2.14
+	mesh.radius = radius * 1.12
+	mesh.height = radius * 2.24
 	mesh.radial_segments = 48
 	mesh.rings = 24
 	var shell := MeshInstance3D.new()
