@@ -466,7 +466,21 @@ func _show_ship_menu(entity_id: String) -> void:
 			if not turret.is_empty():
 				IonClient.set_variable(turret[0].module_id, "target", entity_id)}},
 	]
+	var controller := _modules.filter(func(m): return m.type == "DockingController")
+	if not controller.is_empty():
+		items.append({"label": "Dock", "node": {"kind": "run", "run": func(): _dock(controller[0].module_id, entity_id)}})
+		items.append({"label": "Undock", "node": {"kind": "run", "run": func(): _undock(controller[0].module_id)}})
 	_palette.open_list("Nave %s%s" % [short, _distance_label(contact[1]) if contact != null else ""], items)
+
+
+func _dock(module_id: String, target_id: String) -> void:
+	var result := await IonClient.action(module_id, "dock", PackedStringArray([target_id]))
+	_hud.notify("Docking avviato" if result.ok else "Docking fallito: %s" % result.error)
+
+
+func _undock(module_id: String) -> void:
+	var result := await IonClient.action(module_id, "exit")
+	_hud.notify("Uscita dal dock richiesta" if result.ok else "Uscita fallita: %s" % result.error)
 
 
 func _show_body_menu(entry_index: int, kind: String) -> void:
