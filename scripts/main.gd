@@ -27,6 +27,7 @@ var _active_goal := {}
 var _pending_resume: Variant = null
 var _game_started := false
 var _hovered := {}
+var _snap := {}
 
 
 func _ready() -> void:
@@ -131,6 +132,7 @@ func _on_disconnected() -> void:
 
 func _process(_delta: float) -> void:
 	_scene.camera.input_captured = not _game_started or InputState.captured
+	_render_frame()
 
 
 # ---- input ---------------------------------------------------------------
@@ -174,8 +176,6 @@ func _on_state(entity: Dictionary) -> void:
 		if not target.is_empty():
 			aim = IonMath.to_vec3(IonMath.relative(ship_position, target))
 	_scene.camera.set_aim_point(aim)
-	if orientation != null:
-		_scene.set_own_ship_orientation(orientation)
 	var size = ShipRead.size(entity)
 	if size != null:
 		_scene.set_own_ship_size(size)
@@ -201,11 +201,43 @@ func _on_state(entity: Dictionary) -> void:
 
 	if ship_position.is_empty():
 		return
+	var velocity = ShipRead.velocity(entity)
+	var angular = ShipRead.angular_velocity(entity)
+	_snap = {
+		"position": ship_position,
+		"velocity": velocity if velocity != null else Vector3.ZERO,
+		"angular": angular if angular != null else Vector3.ZERO,
+		"orientation": orientation,
+		"at_ms": IonMath.now_ms(),
+	}
+	var entries := _system_map.latest
+	var contacts := _radar.get_predicted(IonMath.now_ms())
+	_update_panels(ship_position, entries, contacts)
+	_render_frame()
+
+
+## Runs every frame: dead-reckons the ship between 15 Hz polls so motion and rotation look continuous.
+func _render_frame() -> void:
+	if _snap.is_empty():
+		return
+	var dt := clampf((IonMath.now_ms() - float(_snap.at_ms)) / 1000.0, 0.0, 0.25)
+	var base: Dictionary = _snap.position
+	var v: Vector3 = _snap.velocity
+	var ship_position := {
+		"sector": base.sector,
+		"shift": {"x": base.shift.x + v.x * dt, "y": base.shift.y + v.y * dt, "z": base.shift.z + v.z * dt},
+	}
+	var orientation: Variant = _snap.orientation
+	if orientation != null:
+		var w: Vector3 = _snap.angular
+		if w.length() > 1e-6:
+			orientation = ((orientation as Quaternion) * Quaternion(w.normalized(), w.length() * dt)).normalized()
+		_scene.set_own_ship_orientation(orientation)
+
 	var entries := _system_map.latest
 	var contacts := _radar.get_predicted(IonMath.now_ms())
 	_scene.starfield.update(ship_position, entries)
 	_minimap.update_data(ship_position, orientation, entries, contacts)
-	_update_panels(ship_position, entries, contacts)
 
 	var contact_data: Array = []
 	for contact in contacts:
