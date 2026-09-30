@@ -71,7 +71,7 @@ class ShipVisual:
 func _ready() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color.BLACK
+	env.background_color = Color(0.035, 0.08, 0.17)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color.WHITE
 	env.ambient_light_energy = 0.15

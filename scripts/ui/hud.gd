@@ -17,7 +17,7 @@ const PHASE_LABELS := {
 	"fineStop": "Frenata di precisione",
 }
 
-var _status_label: Label
+var _status_label: RichTextLabel
 var _fps_label: Label
 var _last_velocity: Variant = null
 var _last_ts := 0.0
@@ -38,7 +38,17 @@ func _ready() -> void:
 
 	var status := PanelContainer.new()
 	status.position = Vector2(16, 16)
-	_status_label = Label.new()
+	_status_label = RichTextLabel.new()
+	_status_label.bbcode_enabled = true
+	_status_label.fit_content = true
+	_status_label.scroll_active = false
+	_status_label.custom_minimum_size = Vector2(470, 0)
+	var mono := SystemFont.new()
+	mono.font_names = PackedStringArray(["DejaVu Sans Mono", "Liberation Mono", "monospace"])
+	_status_label.add_theme_font_override("normal_font", mono)
+	_status_label.add_theme_font_override("bold_font", mono)
+	_status_label.add_theme_font_size_override("normal_font_size", 13)
+	_status_label.add_theme_font_size_override("bold_font_size", 13)
 	status.add_child(_status_label)
 	add_child(status)
 
@@ -104,7 +114,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_fps_label.text = "FPS %d" % Engine.get_frames_per_second()
-	_status_label.text = "POS %s\nVEL %s m/s\nACC %s m/s²\nANG %s deg/s" % [_fmt(_pos), _fmt(_vel), _fmt(_acc), _fmt(_ang)]
+	_status_label.text = "%s\n%s\n%s\n%s" % [_row("POS", _pos, ""), _row("VEL", _vel, "m/s"), _row("ACC", _acc, "m/s²"), _row("ANG", _ang, "°/s")]
 
 
 static func _fmt(v: Vector3) -> String:
@@ -142,3 +152,7 @@ func notify(message: String) -> void:
 	_toast_label.text = message
 	_toast.visible = true
 	_toast_timer.start(6.0)
+
+
+static func _row(label: String, v: Vector3, unit: String) -> String:
+	return "[color=#66ccff][b]%s[/b][/color]  %s  [color=#6f8396]%s[/color]" % [label, _fmt(v), unit]

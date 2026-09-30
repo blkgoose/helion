@@ -14,6 +14,7 @@ func _init(title: String) -> void:
 	heading.text = title
 	heading.add_theme_color_override("font_color", UiTheme.ACCENT)
 	box.add_child(heading)
+	box.add_child(HSeparator.new())
 	_list = VBoxContainer.new()
 	box.add_child(_list)
 	add_child(box)

@@ -29,8 +29,13 @@ func update_data(ship_position: Dictionary, orientation: Variant, system_entries
 func _draw() -> void:
 	var c := Vector2(SIZE_PX, SIZE_PX) / 2.0
 	var max_r := SIZE_PX / 2.0 - 8.0
-	draw_circle(c, SIZE_PX / 2.0, Color(0, 0, 0, 0.5))
-	draw_arc(c, max_r, 0, TAU, 64, Color("333333"), 1.0)
+	draw_circle(c, SIZE_PX / 2.0, Color(0.03, 0.05, 0.09, 0.62))
+	draw_arc(c, SIZE_PX / 2.0 - 1.0, 0, TAU, 64, Color(0.4, 0.8, 1.0, 0.35), 2.0)
+	draw_arc(c, max_r, 0, TAU, 64, Color(0.4, 0.8, 1.0, 0.2), 1.0)
+	draw_arc(c, max_r * 0.66, 0, TAU, 64, Color(0.4, 0.8, 1.0, 0.1), 1.0)
+	draw_arc(c, max_r * 0.33, 0, TAU, 64, Color(0.4, 0.8, 1.0, 0.1), 1.0)
+	draw_line(c + Vector2(0, -max_r), c + Vector2(0, max_r), Color(0.4, 0.8, 1.0, 0.08))
+	draw_line(c + Vector2(-max_r, 0), c + Vector2(max_r, 0), Color(0.4, 0.8, 1.0, 0.08))
 	if _orientation == null or _ship_position.is_empty():
 		draw_circle(c, 3, UiTheme.ACCENT)
 		return

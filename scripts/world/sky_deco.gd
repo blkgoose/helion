@@ -43,7 +43,7 @@ void fragment() {
 	float r = length(p);
 	float theta = atan(p.y, p.x);
 	float arms = 0.5 + 0.5 * cos(2.0 * theta - twist * log(r + 0.05));
-	float disc = exp(-r * 3.2) * (0.35 + 0.65 * pow(arms, 2.0));
+	float disc = exp(-r * 2.6) * (0.35 + 0.65 * pow(arms, 2.0));
 	float core = exp(-r * 14.0) * 1.6;
 	float edge = smoothstep(1.0, 0.7, r);
 	float d = (disc + core) * edge * intensity;
@@ -82,7 +82,7 @@ func _make_noise(seed_value: int) -> ImageTexture:
 	for y in 256:
 		for x in 256:
 			var v := image.get_pixel(x, y).r
-			v = clampf((v - 0.35) * 2.2, 0.0, 1.0)
+			v = clampf((v - 0.3) * 1.6, 0.0, 1.0)
 			image.set_pixel(x, y, Color(v, v, v, 1))
 	return ImageTexture.create_from_image(image)
 
@@ -121,24 +121,24 @@ func _milky_way() -> void:
 		var direction := (u * cos(angle) + v * sin(angle) + axis * spread).normalized()
 		var warm := _rng.randf()
 		var tint := Color(0.75, 0.8, 1.0).lerp(Color(1.0, 0.85, 0.65), warm * 0.6)
-		_cloud(direction, _rng.randf_range(24000.0, 42000.0), tint, _rng.randf_range(0.25, 0.5), 0.0)
+		_cloud(direction, _rng.randf_range(24000.0, 42000.0), tint, _rng.randf_range(0.12, 0.26), 0.0)
 
 
 func _nebulae() -> void:
 	var palette := [Color("ff3fa0"), Color("3fd0ff"), Color("ff8a2a"), Color("8a4dff"), Color("2affb0"), Color("ff4d4d")]
 	for i in 8:
-		_cloud(_random_direction(), _rng.randf_range(30000.0, 55000.0), palette[i % palette.size()], _rng.randf_range(0.45, 0.8), 0.0)
+		_cloud(_random_direction(), _rng.randf_range(30000.0, 55000.0), palette[i % palette.size()], _rng.randf_range(0.16, 0.34), 0.0)
 
 
 func _galaxies() -> void:
 	var palette := [Color("a8c4ff"), Color("ffd6a0"), Color("d8b0ff"), Color("ffb0c8")]
 	for i in 6:
 		var quad := QuadMesh.new()
-		quad.size = Vector2.ONE * _rng.randf_range(5000.0, 12000.0)
+		quad.size = Vector2.ONE * _rng.randf_range(9000.0, 20000.0)
 		var material := ShaderMaterial.new()
 		material.shader = _galaxy_shader
 		material.set_shader_parameter("tint", palette[i % palette.size()])
-		material.set_shader_parameter("intensity", _rng.randf_range(0.9, 1.4))
+		material.set_shader_parameter("intensity", _rng.randf_range(0.18, 0.32))
 		material.set_shader_parameter("rotation", _rng.randf() * TAU)
 		material.set_shader_parameter("squash", _rng.randf_range(0.3, 0.8))
 		material.set_shader_parameter("twist", _rng.randf_range(3.0, 7.0))
@@ -151,4 +151,4 @@ func _bright_stars() -> void:
 	for i in 700:
 		positions.append(_random_direction() * RADIUS * 0.99)
 		colors.append(Color.from_hsv(_rng.randf_range(0.05, 0.65), _rng.randf_range(0.0, 0.5), 1.0))
-	add_child(PointCloud.make(positions, colors, 0.5, -3, 2.0))
+	add_child(PointCloud.make(positions, colors, 0.22, -3, 1.5))
