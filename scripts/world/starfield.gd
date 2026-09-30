@@ -86,8 +86,13 @@ func update(ship_position: Dictionary, entries: Array) -> void:
 		else:
 			var stand_in := SKY_RADIUS_M * (1.0 if is_star else 0.85)
 			var visual_radius := maxf(MIN_VISUAL_RADIUS_M, (real_radius / distance) * stand_in)
+			var proxy_model := "asteroid" if kind == "asteroid" else "planet"
+			if node != null and node.has_meta("fallback") and not is_star and Models.is_ready(proxy_model):
+				node.queue_free()
+				node = null
+				_nodes.erase(key)
 			if node == null:
-				node = _build_proxy(is_star)
+				node = _build_proxy(is_star, proxy_model)
 				add_child(node)
 				_nodes[key] = node
 			if is_star:
@@ -148,7 +153,11 @@ func _build_near(kind: String, is_star: bool, real_radius: float, model_kind: St
 	return instance
 
 
-func _build_proxy(is_star: bool) -> Node3D:
+func _build_proxy(is_star: bool, model_kind: String) -> Node3D:
+	if not is_star:
+		var model := Models.spawn(model_kind, 1.0)
+		if model != null:
+			return model
 	var instance := MeshInstance3D.new()
 	var material := StandardMaterial3D.new()
 	if is_star:
@@ -172,6 +181,7 @@ func _build_proxy(is_star: bool) -> Node3D:
 		sphere.rings = 10
 		instance.mesh = sphere
 		material.albedo_color = PLANET_COLOR
+	instance.set_meta("fallback", true)
 	instance.material_override = material
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return instance
