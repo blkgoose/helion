@@ -32,6 +32,38 @@ func _ready() -> void:
 	_status = Label.new()
 	box.add_child(_status)
 
+	_apply_cli_args()
+
+
+## CLI: --server URL --ship ID --component C --password P, or --login "id component password"
+## (also --key=value). With all credentials present it logs in automatically.
+func _apply_cli_args() -> void:
+	var args := OS.get_cmdline_args() + OS.get_cmdline_user_args()
+	var opts := {}
+	var i := 0
+	while i < args.size():
+		var arg := args[i]
+		if arg.begins_with("--") and arg.length() > 2:
+			var key := arg.substr(2)
+			if "=" in key:
+				var parts := key.split("=", true, 1)
+				opts[parts[0]] = parts[1]
+			elif i + 1 < args.size() and not args[i + 1].begins_with("--"):
+				opts[key] = args[i + 1]
+				i += 1
+		i += 1
+	if opts.has("login"):
+		var parsed := parse_login_string(opts.login)
+		if not parsed.is_empty():
+			opts["ship"] = parsed[0]
+			opts["component"] = parsed[1]
+			opts["password"] = parsed[2]
+	for key in _fields:
+		if opts.has(key):
+			_fields[key].text = opts[key]
+	if opts.has("ship") and opts.has("password"):
+		submit.call_deferred()
+
 
 func set_status(message: String) -> void:
 	_status.text = message
