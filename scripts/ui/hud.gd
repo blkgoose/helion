@@ -129,10 +129,13 @@ func update_state(entity: Dictionary) -> void:
 		_ang = (angular as Vector3) * IonMath.RAD_TO_DEG
 
 
-func update_autopilot(engaged: bool, label: String, phase: String) -> void:
+func update_autopilot(engaged: bool, label: String, phase: String, distance_m: Variant = null) -> void:
 	_autopilot_panel.visible = engaged
 	if engaged:
-		_autopilot_label.text = "%s — %s" % [label, PHASE_LABELS.get(phase, "")]
+		var text := "%s — %s" % [label, PHASE_LABELS.get(phase, "")]
+		if distance_m != null:
+			text += " — %s" % IonMath.format_distance(distance_m)
+		_autopilot_label.text = text
 
 
 func notify(message: String) -> void:

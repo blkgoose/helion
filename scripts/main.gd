@@ -182,7 +182,12 @@ func _on_state(entity: Dictionary) -> void:
 
 	_try_resume()
 	_autopilot.tick(entity)
-	_hud.update_autopilot(_autopilot.is_engaged(), _autopilot.label, _autopilot.phase)
+	var goal_distance: Variant = null
+	if _autopilot.is_engaged() and not ship_position.is_empty() and not _active_goal.is_empty() and _active_goal.kind != "stop":
+		var goal_target := _resolve_goal(_active_goal).get_target.call(IonMath.now_ms()) as Dictionary
+		if not goal_target.is_empty():
+			goal_distance = IonMath.length(IonMath.relative(ship_position, goal_target))
+	_hud.update_autopilot(_autopilot.is_engaged(), _autopilot.label, _autopilot.phase, goal_distance)
 	if not _autopilot.is_engaged() and not _active_goal.is_empty():
 		Persist.set_value("goal", null)
 		_active_goal = {}

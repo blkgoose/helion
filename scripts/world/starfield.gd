@@ -30,7 +30,8 @@ var _glow_texture: GradientTexture2D
 func _ready() -> void:
 	_light.light_color = Color("fff4e6")
 	_light.light_energy = 0.0
-	_light.shadow_enabled = false
+	_light.shadow_enabled = true
+	_light.directional_shadow_max_distance = 2000.0
 	add_child(_light)
 
 	var gradient := Gradient.new()
