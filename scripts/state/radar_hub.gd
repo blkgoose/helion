@@ -2,10 +2,9 @@ class_name RadarHub
 extends Node
 ## Any number of Radar modules merged into one contact list. A smaller-radius (near, fast) radar wins
 ## for everything inside its range; larger ones only supply contacts beyond the smaller radars' radius.
-## Each merged contact carries a 7th element: scan staleness 0 (fresh) .. 1 (two cooldown periods old).
+## Each merged contact carries a 7th element: scan staleness 0 (fresh) .. 1 (OLD_SCAN_S old).
 
-const STALE_PERIODS := 2.0
-const MIN_STALE_S := 2.0
+const OLD_SCAN_S := 90.0
 
 var _pollers := {}
 var _sorted: Array = []
@@ -57,8 +56,7 @@ func get_predicted(now_ms: float) -> Array:
 	for poller in _sorted:
 		if poller.latest_at_ms <= 0.0:
 			continue
-		var period := maxf(RadarPoller.cooldown_for_radius(poller.radius_m) * STALE_PERIODS, MIN_STALE_S)
-		var stale := clampf((now_ms - poller.latest_at_ms) / 1000.0 / period, 0.0, 1.0)
+		var stale := clampf((now_ms - poller.latest_at_ms) / 1000.0 / OLD_SCAN_S, 0.0, 1.0)
 		for entry in poller.get_predicted(now_ms):
 			if taken.has(entry[0]):
 				continue
