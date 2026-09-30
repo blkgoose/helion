@@ -40,11 +40,30 @@ func get_state() -> Dictionary:
 
 
 func man(module_id: String) -> Dictionary:
-	return await _dispatch("MAN %s" % module_id)
+	var result := await _dispatch("MAN %s" % module_id)
+	if result.ok:
+		var parsed = JSON.parse_string(result.data)
+		if parsed is Dictionary:
+			result.data = parsed
+		else:
+			return _error("MAN returned invalid JSON")
+	return result
 
 
 func set_variable(module_id: String, variable: String, value) -> Dictionary:
-	return await _dispatch("SET %s %s %s" % [module_id, variable, str(value)])
+	var text: String = IonMath.format_number(value) if value is float else str(value)
+	return await _dispatch("SET %s %s %s" % [module_id, variable, text])
+
+
+## For actions whose result is JSON (SystemMap.scan, Radar.scan) rather than "done".
+func action_json(module_id: String, action_name: String, params: PackedStringArray = []) -> Dictionary:
+	var result := await action(module_id, action_name, params)
+	if result.ok:
+		var parsed = JSON.parse_string(result.data)
+		if parsed == null:
+			return _error("%s returned invalid JSON" % action_name)
+		result.data = parsed
+	return result
 
 
 func action(module_id: String, action_name: String, params: PackedStringArray = []) -> Dictionary:
