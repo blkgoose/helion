@@ -32,8 +32,8 @@ void vertex() {
 	POINT_SIZE = 2.5;
 }
 void fragment() {
-	ALBEDO = vec3(0.75, 0.82, 1.0) * fade * 0.9;
-	ALPHA = fade;
+	ALBEDO = vec3(0.75, 0.82, 1.0) * fade * 0.45;
+	ALPHA = fade * 0.6;
 }
 """
 
