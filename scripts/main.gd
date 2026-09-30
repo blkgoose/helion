@@ -49,7 +49,9 @@ func _build_world() -> void:
 	add_child(_ship)
 
 	_camera = TacticalCamera.new()
-	_camera.far = 1.0e7
+	# A huge far/near ratio makes the light culler's frustum intersection fail (black screen).
+	_camera.near = 0.5
+	_camera.far = 1.0e5
 	add_child(_camera)
 	_camera.make_current()
 
