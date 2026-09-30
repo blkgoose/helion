@@ -211,11 +211,6 @@ func _on_state(entity: Dictionary) -> void:
 		var sdt := (now - float(_snap.at_ms)) / 1000.0
 		if sdt > 0.01:
 			accel = _snap.accel.lerp((vel_now - _snap.velocity) / sdt, 0.5)
-			if orientation != null and _snap.orientation != null:
-				var dq: Quaternion = ((_snap.orientation as Quaternion).inverse() * (orientation as Quaternion)).normalized()
-				if dq.w < 0.0:
-					dq = Quaternion(-dq.x, -dq.y, -dq.z, -dq.w)
-				ang_now = (dq.get_axis() * dq.get_angle() / sdt) if dq.get_angle() > 1e-6 else Vector3.ZERO
 			ang_accel = _snap.ang_accel.lerp((ang_now - _snap.angular) / sdt, 0.5)
 		else:
 			accel = _snap.accel
