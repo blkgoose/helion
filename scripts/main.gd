@@ -203,12 +203,27 @@ func _on_state(entity: Dictionary) -> void:
 		return
 	var velocity = ShipRead.velocity(entity)
 	var angular = ShipRead.angular_velocity(entity)
+	var now := IonMath.now_ms()
+	var vel_now: Vector3 = velocity if velocity != null else Vector3.ZERO
+	var ang_now: Vector3 = angular if angular != null else Vector3.ZERO
+	var accel := Vector3.ZERO
+	var ang_accel := Vector3.ZERO
+	if not _snap.is_empty():
+		var sdt := (now - float(_snap.at_ms)) / 1000.0
+		if sdt > 0.01:
+			accel = _snap.accel.lerp((vel_now - _snap.velocity) / sdt, 0.5)
+			ang_accel = _snap.ang_accel.lerp((ang_now - _snap.angular) / sdt, 0.5)
+		else:
+			accel = _snap.accel
+			ang_accel = _snap.ang_accel
 	_snap = {
+		"accel": accel,
+		"ang_accel": ang_accel,
 		"position": ship_position,
 		"velocity": velocity if velocity != null else Vector3.ZERO,
 		"angular": angular if angular != null else Vector3.ZERO,
 		"orientation": orientation,
-		"at_ms": IonMath.now_ms(),
+		"at_ms": now,
 	}
 	var entries := _system_map.latest
 	var contacts := _radar.get_predicted(IonMath.now_ms())
@@ -223,13 +238,14 @@ func _render_frame() -> void:
 	var dt := clampf((IonMath.now_ms() - float(_snap.at_ms)) / 1000.0, 0.0, 0.25)
 	var base: Dictionary = _snap.position
 	var v: Vector3 = _snap.velocity
+	var d: Vector3 = v * dt + 0.5 * (_snap.accel as Vector3) * dt * dt
 	var ship_position := {
 		"sector": base.sector,
-		"shift": {"x": base.shift.x + v.x * dt, "y": base.shift.y + v.y * dt, "z": base.shift.z + v.z * dt},
+		"shift": {"x": base.shift.x + d.x, "y": base.shift.y + d.y, "z": base.shift.z + d.z},
 	}
 	var orientation: Variant = _snap.orientation
 	if orientation != null:
-		var w: Vector3 = _snap.angular
+		var w: Vector3 = (_snap.angular as Vector3) + 0.5 * (_snap.ang_accel as Vector3) * dt
 		if w.length() > 1e-6:
 			orientation = ((orientation as Quaternion) * Quaternion(w.normalized(), w.length() * dt)).normalized()
 		_scene.set_own_ship_orientation(orientation)
