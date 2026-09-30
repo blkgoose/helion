@@ -19,6 +19,9 @@ var _palette: CommandPalette
 var _modal: ModulesModal
 var _login: LoginPanel
 var _ui_root: Control
+const CORRECTION_TAU_S := 0.12
+var _last_render_pos: Dictionary = {}
+var _last_render_q: Variant = null
 var _radar := RadarHub.new()
 var _system_map := SystemMapPoller.new()
 var _autopilot := Autopilot.new()
@@ -215,7 +218,15 @@ func _on_state(entity: Dictionary) -> void:
 		else:
 			accel = _snap.accel
 			ang_accel = _snap.ang_accel
+	var pos_err := Vector3.ZERO
+	var rot_err := Quaternion.IDENTITY
+	if not _snap.is_empty() and not _last_render_pos.is_empty():
+		pos_err = IonMath.to_vec3(IonMath.relative(ship_position, _last_render_pos))
+		if orientation != null and _last_render_q != null:
+			rot_err = ((_last_render_q as Quaternion) * (orientation as Quaternion).inverse()).normalized()
 	_snap = {
+		"pos_err": pos_err,
+		"rot_err": rot_err,
 		"accel": accel,
 		"ang_accel": ang_accel,
 		"position": ship_position,
@@ -238,9 +249,11 @@ func _render_frame() -> void:
 	var base: Dictionary = _snap.position
 	var v: Vector3 = _snap.velocity
 	var d: Vector3 = v * dt + 0.5 * (_snap.accel as Vector3) * dt * dt
+	var decay := exp(-dt / CORRECTION_TAU_S)
+	var pe: Vector3 = (_snap.pos_err as Vector3) * decay
 	var ship_position := {
 		"sector": base.sector,
-		"shift": {"x": base.shift.x + d.x, "y": base.shift.y + d.y, "z": base.shift.z + d.z},
+		"shift": {"x": base.shift.x + d.x + pe.x, "y": base.shift.y + d.y + pe.y, "z": base.shift.z + d.z + pe.z},
 	}
 	var orientation: Variant = _snap.orientation
 	if orientation != null:
@@ -249,7 +262,10 @@ func _render_frame() -> void:
 			w = Vector3.ZERO
 		if w.length() > 1e-6:
 			orientation = ((orientation as Quaternion) * Quaternion(w.normalized(), w.length() * dt)).normalized()
+		orientation = (Quaternion.IDENTITY.slerp(_snap.rot_err as Quaternion, decay) * (orientation as Quaternion)).normalized()
 		_scene.set_own_ship_orientation(orientation)
+		_last_render_q = orientation
+	_last_render_pos = ship_position
 
 	var speed_vec: Vector3 = v + (_snap.accel as Vector3) * dt
 	_scene.advance_dust(ship_position, speed_vec)
