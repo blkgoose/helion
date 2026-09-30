@@ -6,6 +6,9 @@ extends Control
 const EDGE_MARGIN := 0.92
 
 var _labels: Array[Label] = []
+var _leaders: Array = []
+
+const LABEL_OFFSET := Vector2(38, -30)
 
 
 func _ready() -> void:
@@ -15,6 +18,7 @@ func _ready() -> void:
 
 ## entries: [{icon, world_position: Vector3, distance_m}]
 func update_markers(camera: Camera3D, entries: Array) -> void:
+	_leaders.clear()
 	while _labels.size() < entries.size():
 		var label := Label.new()
 		label.add_theme_color_override("font_color", Color("ddddee"))
@@ -49,4 +53,17 @@ func update_markers(camera: Camera3D, entries: Array) -> void:
 		label.text = text
 		label.visible = true
 		var screen := Vector2((x * 0.5 + 0.5) * view.x, (1.0 - (y * 0.5 + 0.5)) * view.y)
-		label.position = screen - label.size / 2.0
+		if offscreen:
+			label.position = screen - label.size / 2.0
+		else:
+			label.position = screen + LABEL_OFFSET + Vector2(6, -label.size.y / 2.0)
+			_leaders.append({"p": screen, "l": screen + LABEL_OFFSET + Vector2(-4, 0)})
+	queue_redraw()
+
+
+func _draw() -> void:
+	var color := Color(0.75, 0.9, 1.0, 0.7)
+	for leader in _leaders:
+		var dir: Vector2 = (leader.l - leader.p).normalized()
+		draw_arc(leader.p, 5.0, 0, TAU, 20, color, 1.2, true)
+		draw_line(leader.p + dir * 5.0, leader.l, color, 1.0, true)
