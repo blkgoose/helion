@@ -14,6 +14,7 @@ var starfield: Starfield
 var _skybox: Skybox
 var _cage: OrientationCage
 var _dust: DustField
+var _deco: SkyDeco
 var _last_ship: Dictionary = {}
 var _own_ship: ShipVisual
 var _own_light: OmniLight3D
@@ -92,6 +93,8 @@ func _ready() -> void:
 	add_child(_cage)
 	_skybox = Skybox.new()
 	add_child(_skybox)
+	_deco = SkyDeco.new()
+	add_child(_deco)
 	_dust = DustField.new()
 	add_child(_dust)
 	starfield = Starfield.new()
@@ -122,6 +125,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	_cage.follow(camera.position)
 	_skybox.follow(camera.position)
+	_deco.position = camera.position
 	_own_ship.upgrade()
 	for contact in _contacts.values():
 		contact.visual.upgrade()
