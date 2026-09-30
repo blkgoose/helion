@@ -141,7 +141,7 @@ func _send() -> void:
 
 
 func _queue(jobs: Array, module_id: String, variable: String, value: float) -> void:
-	var rounded := roundf(value * 10.0) / 10.0
+	var rounded := roundf(value * 100.0) / 100.0
 	var key := "%s:%s" % [module_id, variable]
 	if _sent.get(key) == rounded:
 		return

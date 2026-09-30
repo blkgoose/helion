@@ -10,15 +10,17 @@ const MAX_COMMAND := 100.0
 const BRAKING_ACCEL_FRACTION := 0.6
 const MAX_RATE_DEG_S := 45.0
 const MIN_RATE_LOOP_TIME_S := 0.15
-const COMMAND_DEADBAND := 0.1
+const COMMAND_DEADBAND := 0.02
 const POINTING_SETTLE_TIME_S := 12.0
 const POINTING_SLEW_P := 3.0 / POINTING_SETTLE_TIME_S
 
 const MIN_PROBE_SEGMENT_MS := 400.0
-const MAX_PROBE_SEGMENT_MS := 2500.0
-const PROBE_RATE_CHANGE_DEG_S := 0.8
+const MAX_PROBE_SEGMENT_MS := 4000.0
+const PROBE_RATE_CHANGE_DEG_S := 0.12
+# Doublet strength: a 1% probe measures torque per % at the small commands fine control actually uses.
+const PROBE_COMMAND_PCT := 1.0
 const MIN_FIT_SAMPLES := 3
-const MIN_ACCEL_DEG_S2 := 0.02
+const MIN_ACCEL_DEG_S2 := 0.002
 const MAX_SEGMENT_MISMATCH := 5.0
 
 
@@ -109,9 +111,9 @@ class AxisProbe:
 		elif _segment == 1 and elapsed >= _plus_segment_ms:
 			_end_segment(now_ms)
 		if _segment == 0:
-			return Attitude.MAX_COMMAND
+			return Attitude.PROBE_COMMAND_PCT
 		if _segment == 1:
-			return -Attitude.MAX_COMMAND
+			return -Attitude.PROBE_COMMAND_PCT
 		return 0.0
 
 	func _end_segment(now_ms: float) -> void:
@@ -127,8 +129,8 @@ class AxisProbe:
 		var down = Attitude._slope(_fitted[1])
 		if up == null or down == null:
 			return null
-		var up_gain: float = up / Attitude.MAX_COMMAND
-		var down_gain: float = down / -Attitude.MAX_COMMAND
+		var up_gain: float = up / Attitude.PROBE_COMMAND_PCT
+		var down_gain: float = down / -Attitude.PROBE_COMMAND_PCT
 		var small := minf(absf(up_gain), absf(down_gain))
 		var consistent := (
 			signf(up_gain) == signf(down_gain)

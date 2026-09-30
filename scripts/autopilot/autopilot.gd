@@ -10,6 +10,8 @@ signal failed(reason: String)
 const RAD_TO_DEG := 180.0 / PI
 const MAX_CALIBRATION_ATTEMPTS := 4
 const TIMING_SMOOTHING := 0.2
+# Bump when the probe method changes so stale cached gains are re-measured.
+const CALIBRATION_VERSION := 2
 const ALIGNMENT_TOLERANCE_DEG := 25.0
 const DEFAULT_MAX_CRUISE_SPEED := 1000.0
 const SPEED_GAIN := 20.0
@@ -95,7 +97,7 @@ func set_modules(modules: Array, entity: Variant) -> void:
 func _calibration_matches(stored: Dictionary) -> bool:
 	if _size_m == null or _mass_kg == null:
 		return false
-	if stored.get("rcsIds") != _rcs_ids:
+	if stored.get("rcsIds") != _rcs_ids or int(stored.get("version", 1)) != CALIBRATION_VERSION:
 		return false
 	if not is_equal_approx(float(stored.get("sizeM", -1.0)), float(_size_m)):
 		return false
@@ -115,7 +117,7 @@ func _try_use_cached_calibration() -> bool:
 func _persist_calibration() -> void:
 	if _gains == null or _size_m == null or _mass_kg == null:
 		return
-	_cached_calibration = {"rcsIds": _rcs_ids, "sizeM": _size_m, "massKg": _mass_kg, "gains": _gains}
+	_cached_calibration = {"version": CALIBRATION_VERSION, "rcsIds": _rcs_ids, "sizeM": _size_m, "massKg": _mass_kg, "gains": _gains}
 	Persist.set_value("calibration", _cached_calibration)
 
 
@@ -252,7 +254,7 @@ func _send_zeros() -> void:
 
 
 func _queue_set(jobs: Array, module_id: String, variable: String, value: float) -> void:
-	var rounded := roundf(value * 10.0) / 10.0
+	var rounded := roundf(value * 100.0) / 100.0
 	var key := "%s:%s" % [module_id, variable]
 	if _sent.get(key) == rounded:
 		return
