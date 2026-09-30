@@ -6,8 +6,11 @@ extends MeshInstance3D
 
 const COUNT := 6000
 const BOX_M := 400.0
-const STREAK_PER_MPS := 0.03
-const STREAK_MAX_M := 70.0
+# Apparent dust speed is log-compressed: real speeds span 1..60000+ m/s, but a 400 m box would alias to noise.
+const VISUAL_SPEED_SCALE := 25.0
+const STREAK_PER_VISUAL_MPS := 0.14
+const STREAK_MIN_M := 3.0
+const STREAK_MAX_M := 34.0
 
 const SHADER := """
 shader_type spatial;
@@ -26,10 +29,10 @@ void vertex() {
 	p -= streak * tail;
 	fade *= mix(1.0, 0.05, tail);
 	VERTEX = (VIEW_MATRIX * vec4(p, 1.0)).xyz;
-	POINT_SIZE = 2.0;
+	POINT_SIZE = 2.5;
 }
 void fragment() {
-	ALBEDO = vec3(0.75, 0.82, 1.0) * fade * 0.6;
+	ALBEDO = vec3(0.75, 0.82, 1.0) * fade * 0.9;
 	ALPHA = fade;
 }
 """
@@ -77,11 +80,13 @@ func _ready() -> void:
 	extra_cull_margin = 16384.0
 
 
-## `ship_delta`: how far the ship moved (world frame) since the last call; `velocity`: current world velocity.
-func advance(ship_delta: Vector3, camera_position: Vector3, velocity: Vector3) -> void:
-	_offset += ship_delta
+func advance(_ship_delta: Vector3, camera_position: Vector3, velocity: Vector3) -> void:
+	var speed := velocity.length()
+	var direction := velocity / speed if speed > 0.5 else Vector3.ZERO
+	var visual_speed := VISUAL_SPEED_SCALE * log(1.0 + speed / 10.0)
+	_offset += direction * visual_speed * get_process_delta_time()
 	_offset = Vector3(fposmod(_offset.x, BOX_M), fposmod(_offset.y, BOX_M), fposmod(_offset.z, BOX_M))
 	_material.set_shader_parameter("offset", _offset)
 	_material.set_shader_parameter("cam", camera_position)
-	# Dust streams past opposite to the ship's motion; the tail trails up-stream of it.
-	_material.set_shader_parameter("streak", -velocity.normalized() * minf(velocity.length() * STREAK_PER_MPS, STREAK_MAX_M))
+	var length := clampf(visual_speed * STREAK_PER_VISUAL_MPS, STREAK_MIN_M, STREAK_MAX_M) if speed > 0.5 else 0.0
+	_material.set_shader_parameter("streak", -direction * length)

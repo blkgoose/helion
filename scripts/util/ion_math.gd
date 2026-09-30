@@ -124,3 +124,8 @@ static func is_seconds_field(field_name: String, description: String) -> bool:
 
 static func now_ms() -> float:
 	return Time.get_unix_time_from_system() * 1000.0
+
+
+## Fresh scans stay white, stale ones fade to red. `t` is 0 (fresh)..1 (stale).
+static func age_color(t: float) -> Color:
+	return Color.WHITE.lerp(Color("e03030"), clampf(t, 0.0, 1.0))

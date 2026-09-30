@@ -38,6 +38,7 @@ func set_rows(rows: Array) -> void:
 			_list.add_child(button)
 		if button.text != rows[i].text:
 			button.text = rows[i].text
+		button.add_theme_color_override("font_color", IonMath.age_color(float(rows[i].get("stale", 0.0))))
 		_list.move_child(button, i)
 	for key in _rows.keys():
 		if not seen.has(key):

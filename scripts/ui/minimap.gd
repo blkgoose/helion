@@ -41,7 +41,7 @@ func _draw() -> void:
 		return
 	var inverse: Quaternion = (_orientation as Quaternion).inverse()
 	for contact in _contacts:
-		_plot(inverse, contact[1], false, Color("cc5555"), 3.0, c, max_r)
+		_plot(inverse, contact[1], false, IonMath.age_color(float(contact[6]) if contact.size() > 6 else 0.0), 3.0, c, max_r)
 	for entry in _system:
 		var is_star: bool = entry.kind == "star"
 		_plot(inverse, entry.position, true, Color("ffdd66") if is_star else Color("6699cc"), 3.0 if is_star else 2.0, c, max_r)

@@ -93,7 +93,7 @@ func _process(delta: float) -> void:
 	look_at(center, Vector3.UP)
 	if shake > 0.001:
 		var t := Time.get_ticks_msec() / 1000.0
-		var amp := shake * 0.02 * _distance
+		var amp := shake * 0.0035 * _distance
 		var dx := (sin(t * 47.0) + sin(t * 31.3 + 1.7) + sin(t * 83.0 + 0.4)) / 3.0
 		var dy := (sin(t * 53.0 + 2.1) + sin(t * 29.1) + sin(t * 71.0 + 1.1)) / 3.0
 		position += global_transform.basis.x * dx * amp + global_transform.basis.y * dy * amp

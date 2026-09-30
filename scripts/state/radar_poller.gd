@@ -9,6 +9,12 @@ const ERROR_BACKOFF_MS := 500.0
 # Beyond this a scan is too stale to trust linear extrapolation (e.g. after a stalled frame).
 const MAX_EXTRAPOLATION_S := 3.0
 const DEFAULT_RADIUS_M := 1e4
+const MAX_CONCURRENT_SCANS := 4
+const MIN_RADIUS_M := 1e3
+const MAX_RADIUS_M := 1e7
+const MAX_COOLDOWN_S := 60.0
+
+static var active_scans := 0
 
 var module_id := ""
 var radius_m := DEFAULT_RADIUS_M
@@ -24,6 +30,8 @@ func tick(entity: Dictionary) -> void:
 	if r != null:
 		radius_m = float(r)
 	if _in_flight or not IonClient.is_logged_in():
+		return
+	if active_scans >= MAX_CONCURRENT_SCANS:
 		return
 	var now := IonMath.now_ms()
 	if now < _retry_after_ms:
@@ -62,7 +70,9 @@ func get_predicted(now_ms: float) -> Array:
 
 func _scan() -> void:
 	_in_flight = true
+	active_scans += 1
 	var result := await IonClient.action_json(module_id, "scan")
+	active_scans -= 1
 	_in_flight = false
 	if result.ok and result.data is Array:
 		latest = result.data
@@ -70,3 +80,8 @@ func _scan() -> void:
 	elif not result.ok:
 		_retry_after_ms = IonMath.now_ms() + ERROR_BACKOFF_MS
 		push_warning("Radar scan failed: %s" % result.error)
+
+
+## Mirrors radar.rs: cooldown grows linearly with radius.
+static func cooldown_for_radius(radius_m: float) -> float:
+	return MAX_COOLDOWN_S * clampf((radius_m - MIN_RADIUS_M) / (MAX_RADIUS_M - MIN_RADIUS_M), 0.0, 1.0)

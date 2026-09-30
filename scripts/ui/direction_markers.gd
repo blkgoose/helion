@@ -53,19 +53,22 @@ func update_markers(camera: Camera3D, entries: Array) -> void:
 		if offscreen:
 			text = ("▶ " if x >= 0.0 else "◀ ") + text
 		label.text = text
+		label.add_theme_color_override("font_color", IonMath.age_color(float(entry.stale)) if entry.has("stale") else Color("ddddee"))
 		label.visible = true
 		var screen := Vector2((x * 0.5 + 0.5) * view.x, (1.0 - (y * 0.5 + 0.5)) * view.y)
 		if offscreen:
 			label.position = screen - label.size / 2.0
 		else:
 			label.position = screen + LABEL_OFFSET + Vector2(6, -label.size.y / 2.0)
-			_leaders.append({"p": screen, "l": screen + LABEL_OFFSET + Vector2(-4, 0)})
+			_leaders.append({"p": screen, "l": screen + LABEL_OFFSET + Vector2(-4, 0), "stale": float(entry.get("stale", 0.0))})
 	queue_redraw()
 
 
 func _draw() -> void:
-	var color := Color(0.75, 0.9, 1.0, 0.7)
 	for leader in _leaders:
+		var color := Color(0.75, 0.9, 1.0, 0.7)
+		if leader.stale > 0.0:
+			color = Color(IonMath.age_color(leader.stale), 0.8)
 		var dir: Vector2 = (leader.l - leader.p).normalized()
 		draw_arc(leader.p, 5.0, 0, TAU, 20, color, 1.2, true)
 		draw_line(leader.p + dir * 5.0, leader.l, color, 1.0, true)

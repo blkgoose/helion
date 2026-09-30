@@ -261,7 +261,7 @@ func _render_frame() -> void:
 	var own = ShipRead.size(ShipState.latest)
 	var ship_size: float = own if own != null else 30.0
 	var closeness := 1.0 - clampf((_scene.camera.position.length() - ship_size) / (ship_size * 8.0), 0.0, 1.0)
-	_scene.camera.shake = clampf(speed_vec.length() / 600.0, 0.0, 1.0) * closeness
+	_scene.camera.shake = clampf(log(1.0 + speed_vec.length() / 100.0) / log(1.0 + 60000.0 / 100.0), 0.0, 1.0) * closeness
 	var entries := _system_map.latest
 	var contacts := _radar.get_predicted(IonMath.now_ms())
 	_scene.starfield.update(ship_position, entries)
@@ -276,6 +276,7 @@ func _render_frame() -> void:
 			"kind": contact[3],
 			"position": IonMath.to_vec3(rel),
 			"distance_m": IonMath.length(rel),
+			"stale": float(contact[6]) if contact.size() > 6 else 0.0,
 		})
 	_scene.sync_contacts(contact_data)
 
@@ -285,7 +286,7 @@ func _render_frame() -> void:
 	for p in _scene.starfield.pickables:
 		marker_entries.append({"icon": "☉" if p.kind == "star" else "●", "world_position": p.position, "distance_m": p.distance_m})
 	for c in nearest.slice(0, DIRECTION_MARKER_CONTACT_LIMIT):
-		marker_entries.append({"icon": IonMath.contact_icon(c.kind), "world_position": c.position, "distance_m": c.distance_m})
+		marker_entries.append({"icon": IonMath.contact_icon(c.kind), "world_position": c.position, "distance_m": c.distance_m, "stale": c.stale})
 	var own_size = ShipRead.size(ShipState.latest)
 	if _scene.camera.position.length() > maxf(120.0, (own_size if own_size != null else 30.0) * 4.0):
 		var sector: Dictionary = ship_position.sector
@@ -317,11 +318,11 @@ func _update_panels(ship_position: Dictionary, entries: Array, contacts: Array) 
 
 	var rows: Array = []
 	for c in contacts:
-		rows.append({"id": c[0], "size": float(c[2]), "kind": c[3], "distance": IonMath.length(IonMath.relative(ship_position, c[1]))})
+		rows.append({"id": c[0], "size": float(c[2]), "kind": c[3], "stale": float(c[6]) if c.size() > 6 else 0.0, "distance": IonMath.length(IonMath.relative(ship_position, c[1]))})
 	rows.sort_custom(func(a, b): return a.distance < b.distance)
 	var radar_rows: Array = []
 	for r in rows.slice(0, RADAR_PANEL_LIMIT):
-		radar_rows.append({"key": r.id, "text": "%s %s — %.2f km, ⌀ %d m" % [IonMath.contact_icon(r.kind), str(r.id).substr(0, 8), r.distance / 1000.0, roundi(r.size)]})
+		radar_rows.append({"key": r.id, "stale": r.stale, "text": "%s %s — %.2f km, ⌀ %d m" % [IonMath.contact_icon(r.kind), str(r.id).substr(0, 8), r.distance / 1000.0, roundi(r.size)]})
 	_radar_panel.set_rows(radar_rows)
 
 
