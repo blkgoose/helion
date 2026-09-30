@@ -22,6 +22,7 @@ var _ui_root: Control
 const CORRECTION_TAU_S := 0.12
 var _last_render_pos: Dictionary = {}
 var _last_render_q: Variant = null
+var _universe_map: UniverseMap
 var _radar := RadarHub.new()
 var _system_map := SystemMapPoller.new()
 var _autopilot := Autopilot.new()
@@ -50,6 +51,11 @@ func _ready() -> void:
 
 	_markers = DirectionMarkers.new()
 	_ui_root.add_child(_markers)
+	_universe_map = UniverseMap.new()
+	_ui_root.add_child(_universe_map)
+	_universe_map.body_selected.connect(_on_system_row)
+	_universe_map.exit_requested.connect(func(): _scene.camera.leave_map())
+	_scene.camera.map_mode_changed.connect(func(active): _universe_map.visible = active and _game_started)
 	_hud = Hud.new()
 	_ui_root.add_child(_hud)
 	_hud.logout_pressed.connect(_logout)
@@ -102,6 +108,8 @@ func _set_game_ui_visible(value: bool) -> void:
 		node.visible = value
 	_scene.camera.input_captured = not value
 	_login.visible = not value
+	if not value:
+		_universe_map.visible = false
 
 
 func _start_game() -> void:
@@ -182,6 +190,7 @@ func _on_state(entity: Dictionary) -> void:
 	var size = ShipRead.size(entity)
 	if size != null:
 		_scene.set_own_ship_size(size)
+		_scene.camera.set_ship_radius(float(size) / 2.0)
 
 	_try_resume()
 	_autopilot.tick(entity)
@@ -301,6 +310,9 @@ func _render_frame() -> void:
 	var own_size = ShipRead.size(ShipState.latest)
 	if _scene.camera.position.length() > maxf(120.0, (own_size if own_size != null else 30.0) * 4.0):
 		marker_entries.append({"icon": "▲", "world_position": Vector3.ZERO, "distance_m": 0.0, "text": "▲ %s" % IonClient.ship_id})
+	if _scene.camera.map_mode:
+		_universe_map.update_data(ship_position, orientation, entries)
+		marker_entries = []
 	_markers.update_markers(_scene.camera, marker_entries)
 
 

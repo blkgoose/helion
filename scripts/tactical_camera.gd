@@ -2,9 +2,12 @@ class_name TacticalCamera
 extends Camera3D
 ## CAD-style orbit camera: wheel zooms, right-drag orbits, WASD/arrows pan, Space recenters.
 
-const ZOOM_FACTOR := 1.15
-const MIN_DISTANCE := 20.0
-const MAX_DISTANCE := 20000.0
+signal map_mode_changed(active: bool)
+
+const ZOOM_FACTOR := 1.5
+const DEFAULT_ZOOM_CLICKS := 2
+const HULL_CLEARANCE := 1.03
+const MAX_DISTANCE := 60000.0
 const ROTATE_SPEED := 0.005
 const PAN_SPEED_AT_UNIT_DISTANCE := 0.08
 const AUTO_DISTANCE_LERP := 2.0
@@ -22,10 +25,32 @@ var _aim_point = null
 var _following := true
 var _auto_distance := true
 var _auto_orient := true
-var _distance := MIN_DISTANCE
+var map_mode := false
+var _min_distance := 20.0
+var _distance := 20.0
 var _yaw := 0.0
 var _pitch := 0.6
 var _dragging := false
+
+
+## The closest orbit hugs the hull; the default view sits DEFAULT_ZOOM_CLICKS wheel clicks out.
+func set_ship_radius(radius: float) -> void:
+	_min_distance = maxf(radius * HULL_CLEARANCE, 1.0)
+	_distance = maxf(_distance, _min_distance)
+
+
+func _default_distance() -> float:
+	return _min_distance * pow(ZOOM_FACTOR, DEFAULT_ZOOM_CLICKS)
+
+
+func leave_map() -> void:
+	_set_map_mode(false)
+
+
+func _set_map_mode(value: bool) -> void:
+	if map_mode != value:
+		map_mode = value
+		map_mode_changed.emit(value)
 
 
 func set_ship_position(position_: Vector3) -> void:
@@ -72,14 +97,21 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _zoom(factor: float) -> void:
 	_auto_distance = false
-	_distance = clampf(_distance * factor, MIN_DISTANCE, MAX_DISTANCE)
+	if map_mode:
+		if factor < 1.0:
+			_set_map_mode(false)
+		return
+	if factor > 1.0 and _distance >= MAX_DISTANCE * 0.999:
+		_set_map_mode(true)
+		return
+	_distance = clampf(_distance * factor, _min_distance, MAX_DISTANCE)
 
 
 func _process(delta: float) -> void:
 	_pan(delta)
 
 	if _auto_distance:
-		_distance += (MIN_DISTANCE - _distance) * minf(1.0, AUTO_DISTANCE_LERP * delta)
+		_distance += (_default_distance() - _distance) * minf(1.0, AUTO_DISTANCE_LERP * delta)
 
 	if _auto_orient and _aim_point != null:
 		_orient_towards_aim(delta)
@@ -100,7 +132,7 @@ func _process(delta: float) -> void:
 
 
 func _pan(delta: float) -> void:
-	if input_captured:
+	if input_captured or map_mode:
 		return
 	var amount := PAN_SPEED_AT_UNIT_DISTANCE * _distance * delta
 	var moved := false
