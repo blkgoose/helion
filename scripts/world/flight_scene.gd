@@ -74,7 +74,7 @@ func _ready() -> void:
 	env.background_color = Color(0.035, 0.08, 0.17)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color.WHITE
-	env.ambient_light_energy = 0.15
+	env.ambient_light_energy = 0.11
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.glow_enabled = true
 	env.glow_intensity = 0.8
@@ -83,8 +83,8 @@ func _ready() -> void:
 	env.ssao_intensity = 2.0
 	env.ssil_enabled = true
 	env.adjustment_enabled = true
-	env.adjustment_contrast = 1.08
-	env.adjustment_saturation = 1.1
+	env.adjustment_contrast = 1.12
+	env.adjustment_saturation = 0.95
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	add_child(world_env)

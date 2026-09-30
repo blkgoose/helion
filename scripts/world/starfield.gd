@@ -122,9 +122,11 @@ func update(ship_position: Dictionary, entries: Array) -> void:
 			_nodes.erase(key)
 
 	if nearest_direction != null:
+		if _atmosphere_material != null:
+			_atmosphere_material.set_shader_parameter("sun_dir", nearest_direction)
 		var up := Vector3.RIGHT if absf((nearest_direction as Vector3).y) > 0.99 else Vector3.UP
 		_light.basis = Basis.looking_at(-(nearest_direction as Vector3), up)
-		_light.light_energy = 1.4
+		_light.light_energy = 2.2
 	else:
 		_light.light_energy = 0.0
 
@@ -196,12 +198,15 @@ func _build_proxy(is_star: bool, model_kind: String) -> Node3D:
 const ATMOSPHERE_SHADER := """
 shader_type spatial;
 render_mode unshaded, blend_add, cull_front, depth_draw_never;
-uniform vec4 tint : source_color = vec4(0.45, 0.7, 1.0, 1.0);
-uniform float strength = 0.35;
+uniform vec3 sun_dir = vec3(0.0, 1.0, 0.0);
+uniform float strength = 0.6;
 void fragment() {
 	float rim = clamp(dot(-normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
-	float a = pow(rim, 2.0) * strength;
-	ALBEDO = tint.rgb * a;
+	vec3 nw = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	float lit = smoothstep(-0.25, 0.7, dot(nw, sun_dir));
+	float a = pow(rim, 2.0) * strength * (0.12 + 0.88 * lit);
+	vec3 col = mix(vec3(0.25, 0.45, 0.85), vec3(0.75, 0.88, 1.0), lit);
+	ALBEDO = col * a;
 	ALPHA = clamp(a, 0.0, 1.0);
 }
 """

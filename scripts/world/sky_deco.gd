@@ -125,9 +125,12 @@ func _milky_way() -> void:
 
 
 func _nebulae() -> void:
-	var palette := [Color("c07a9c"), Color("7aa8c0"), Color("c09a70"), Color("9480c0"), Color("70c0a8"), Color("c08080")]
-	for i in 8:
-		_cloud(_random_direction(), _rng.randf_range(30000.0, 55000.0), palette[i % palette.size()], _rng.randf_range(0.05, 0.12), 0.0)
+	# EVE-style: one dominant regional colour wash made of a few huge soft clouds, plus a couple of warm accents.
+	var wash := Color("5a8fb0")
+	for i in 5:
+		_cloud(_random_direction(), _rng.randf_range(70000.0, 100000.0), wash.lerp(Color("7a6ab0"), _rng.randf() * 0.5), _rng.randf_range(0.08, 0.15), 0.0)
+	for i in 2:
+		_cloud(_random_direction(), _rng.randf_range(30000.0, 45000.0), Color("c08a60"), _rng.randf_range(0.05, 0.09), 0.0)
 
 
 func _galaxies() -> void:
