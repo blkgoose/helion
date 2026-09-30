@@ -366,6 +366,11 @@ func _resolve_goal(goal: Dictionary) -> Dictionary:
 						if c[0] == id:
 							return c[1]
 					return {},
+				"get_velocity": func(now_ms: float) -> Vector3:
+					for c in _radar.get_predicted(now_ms):
+						if c[0] == id:
+							return Vector3(c[4].x, c[4].y, c[4].z)
+					return Vector3.ZERO,
 				"arrival_radius": float(goal.arrivalRadius),
 				"target_radius_m": float(goal.targetRadiusM),
 				"label": goal.label,
@@ -400,6 +405,7 @@ func _engage(goal: Dictionary) -> void:
 			r.get_target, r.arrival_radius, r.target_radius_m, r.label,
 			not is_orbit and goal.get("pointOnly", false),
 			DEFAULT_CRUISE_SPEED_MPS if is_orbit else float(goal.get("maxCruiseSpeedMps", DEFAULT_CRUISE_SPEED_MPS)),
+			r.get("get_velocity", Callable()),
 		)
 	Persist.set_value("goal", goal)
 	_active_goal = goal

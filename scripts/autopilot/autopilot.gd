@@ -42,6 +42,7 @@ var label := ""
 
 var _thrusters := ShipRead.classify_thrusters(null, [])
 var _get_target := Callable()
+var _get_target_velocity := Callable()
 var _arrival_radius := 200.0
 var _target_radius := 0.0
 var _stop_mode := false
@@ -198,8 +199,9 @@ func _reset_for_engage() -> void:
 
 
 ## `get_target` takes now_ms and returns a floating position Dictionary, or {} when the target is lost.
-func engage(get_target: Callable, arrival_radius: float, target_radius_m: float, goal_label: String, point_only := false, max_cruise_speed := DEFAULT_MAX_CRUISE_SPEED) -> void:
+func engage(get_target: Callable, arrival_radius: float, target_radius_m: float, goal_label: String, point_only := false, max_cruise_speed := DEFAULT_MAX_CRUISE_SPEED, get_target_velocity := Callable()) -> void:
 	_get_target = get_target
+	_get_target_velocity = get_target_velocity
 	_arrival_radius = arrival_radius
 	_target_radius = target_radius_m
 	label = goal_label
@@ -222,6 +224,7 @@ func engage_stop() -> void:
 
 func disengage() -> void:
 	_get_target = Callable()
+	_get_target_velocity = Callable()
 	_stop_mode = false
 	_point_only = false
 	label = ""
@@ -321,6 +324,8 @@ func tick(entity: Dictionary) -> void:
 	var world_direction: Variant = null
 	var remaining := 0.0
 	var closing_speed: float
+	# Velocity relative to the target: a moving target (ship, orbit point) must be matched, not just approached.
+	var relative_velocity := velocity_vec
 	if _stop_mode:
 		closing_speed = velocity_vec.length()
 	else:
@@ -338,11 +343,12 @@ func tick(entity: Dictionary) -> void:
 		world_direction = IonMath.to_vec3(rel).normalized()
 		var distance_to_surface := maxf(0.0, distance_to_center - _target_radius)
 		remaining = distance_to_surface - _arrival_radius
-		closing_speed = velocity_vec.dot(world_direction)
+		relative_velocity = velocity_vec - _target_velocity(target_position, now)
+		closing_speed = relative_velocity.dot(world_direction)
 
 	var retrograde: Vector3
-	if velocity_vec.length_squared() > 0.0:
-		retrograde = -velocity_vec.normalized()
+	if relative_velocity.length_squared() > 0.0:
+		retrograde = -relative_velocity.normalized()
 	elif world_direction != null:
 		retrograde = -(world_direction as Vector3)
 	else:
@@ -468,6 +474,17 @@ func tick(entity: Dictionary) -> void:
 	_in_flight = false
 	if _zero_pending:
 		_send_zeros()
+
+
+## Finite difference over the target callable when no explicit velocity source exists (orbits are closed-form).
+func _target_velocity(target_position: Dictionary, now_ms: float) -> Vector3:
+	if not _get_target_velocity.is_null():
+		return _get_target_velocity.call(now_ms)
+	const STEP_MS := 100.0
+	var later: Dictionary = _get_target.call(now_ms + STEP_MS)
+	if later.is_empty():
+		return Vector3.ZERO
+	return IonMath.to_vec3(IonMath.relative(target_position, later)) / (STEP_MS / 1000.0)
 
 
 ## A safe orbit distance: far enough that gravity there is comfortably within the ship's thrust, never below the surface.
