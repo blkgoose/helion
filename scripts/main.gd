@@ -121,6 +121,7 @@ func _set_game_ui_visible(value: bool) -> void:
 	if not value:
 		_universe_map.visible = false
 		_manual.set_active(false)
+		_scene.set_first_person(false)
 		_hud.set_manual_active(false)
 
 
@@ -165,6 +166,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_T and not event.ctrl_pressed:
 		_toggle_manual()
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_P and _manual.active:
+		_scene.set_first_person(not _scene.camera.first_person)
 		return
 	if event is InputEventMouseMotion:
 		_hovered = _scene.pick((event as InputEventMouseMotion).position)
@@ -415,12 +419,15 @@ func _toggle_manual() -> void:
 	if on and (_autopilot.is_engaged()):
 		_disengage()
 	_manual.set_active(on)
+	if not on:
+		_scene.set_first_person(false)
 	_hud.set_manual_active(on)
 
 
 func _engage(goal: Dictionary) -> void:
 	if _manual.active:
 		_manual.set_active(false)
+		_scene.set_first_person(false)
 		_hud.set_manual_active(false)
 	_autopilot.set_modules(_modules, ShipState.latest)
 	if goal.kind == "stop":

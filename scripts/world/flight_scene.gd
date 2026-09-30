@@ -143,6 +143,12 @@ func advance_dust(ship_position: Dictionary, velocity: Vector3) -> void:
 
 func set_own_ship_orientation(orientation: Quaternion) -> void:
 	_own_ship.quaternion = orientation
+	camera.ship_orientation = orientation
+
+
+func set_first_person(on: bool) -> void:
+	camera.first_person = on
+	_own_ship.visible = not on
 
 
 ## `size_m` is the ship's real diameter, from GET's body.size.

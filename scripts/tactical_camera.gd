@@ -18,6 +18,8 @@ const AUTO_ORIENT_LERP := 3.0
 var center := Vector3.ZERO
 var input_captured := false
 var pan_enabled := true
+var first_person := false
+var ship_orientation := Quaternion.IDENTITY
 ## 0..1 wind-like jitter, set by the scene from speed and proximity to the ship.
 var shake := 0.0
 
@@ -77,7 +79,7 @@ func recenter() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if input_captured:
+	if input_captured or first_person:
 		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
@@ -116,6 +118,12 @@ func _process(delta: float) -> void:
 
 	if _auto_orient and _aim_point != null:
 		_orient_towards_aim(delta)
+
+	if first_person:
+		position = Vector3.ZERO
+		# Ship frame: nose +X, left +Y, up +Z; the camera looks down -Z with +Y up.
+		global_transform.basis = Basis(ship_orientation) * Basis(Vector3(0, -1, 0), Vector3(0, 0, 1), Vector3(-1, 0, 0))
+		return
 
 	var offset := Vector3(
 		cos(_pitch) * sin(_yaw),

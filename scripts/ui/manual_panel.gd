@@ -20,7 +20,7 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 6)
 	add_child(box)
 	var title := Label.new()
-	title.text = "// MANUALE  [T]"
+	title.text = "// MANUALE  [T]   [P] PRIMA PERSONA"
 	title.add_theme_color_override("font_color", Color("ffb347"))
 	box.add_child(title)
 
@@ -42,7 +42,7 @@ func _ready() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
 	box.add_child(row)
-	row.add_child(_cluster("ROT", [["Q", KEY_Q, "roll-"], ["W", KEY_W, "pitch+"], ["E", KEY_E, "roll+"]], [["A", KEY_A, "yaw+"], ["S", KEY_S, "pitch-"], ["D", KEY_D, "yaw-"]]))
+	row.add_child(_cluster("ROT", [["Q", KEY_Q, "roll-"], ["W", KEY_W, "muso"], ["E", KEY_E, "roll+"]], [["A", KEY_A, "lato"], ["S", KEY_S, "muso"], ["D", KEY_D, "lato"]]))
 	var thrust := VBoxContainer.new()
 	thrust.add_theme_constant_override("separation", 4)
 	var thrust_title := Label.new()
