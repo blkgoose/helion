@@ -4,7 +4,7 @@ const ACCENT := Color("66ccff")
 const BORDER := Color(0.4, 0.8, 1.0, 0.22)
 const TEXT := Color("d6e2ee")
 const MUTED := Color("8aa0b4")
-const BG := Color(0.03, 0.05, 0.09)
+const BG := Color(0.02, 0.04, 0.07)
 
 
 static func panel_style(alpha := 0.62, border := BORDER) -> StyleBoxFlat:
@@ -12,20 +12,23 @@ static func panel_style(alpha := 0.62, border := BORDER) -> StyleBoxFlat:
 	style.bg_color = Color(BG, alpha)
 	style.border_color = border
 	style.set_border_width_all(1)
-	style.border_width_top = 2
-	style.set_corner_radius_all(7)
+	style.border_width_left = 3
+	style.border_color = Color(ACCENT, 0.55) if border == BORDER else border
+	style.set_corner_radius_all(1)
+	style.corner_detail = 1
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 8
 	style.content_margin_bottom = 8
-	style.shadow_color = Color(0, 0, 0, 0.45)
-	style.shadow_size = 8
+	style.shadow_color = Color(ACCENT, 0.08)
+	style.shadow_size = 10
 	return style
 
 
 static func button_style(bg_alpha: float, border: Color) -> StyleBoxFlat:
 	var style := panel_style(bg_alpha, border)
-	style.border_width_top = 1
+	style.border_width_left = 1
+	style.border_width_bottom = 2
 	style.content_margin_top = 5
 	style.content_margin_bottom = 5
 	style.shadow_size = 0
@@ -35,10 +38,10 @@ static func button_style(bg_alpha: float, border: Color) -> StyleBoxFlat:
 static func make() -> Theme:
 	var theme := Theme.new()
 	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["Inter", "Noto Sans", "DejaVu Sans", "sans-serif"])
+	font.font_names = PackedStringArray(["JetBrains Mono", "DejaVu Sans Mono", "Liberation Mono", "monospace"])
 	font.antialiasing = TextServer.FONT_ANTIALIASING_LCD
 	theme.default_font = font
-	theme.default_font_size = 14
+	theme.default_font_size = 13
 	theme.set_color("font_color", "Label", TEXT)
 	theme.set_stylebox("panel", "PanelContainer", panel_style())
 	theme.set_stylebox("panel", "Panel", panel_style(0.94))

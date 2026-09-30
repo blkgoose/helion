@@ -77,8 +77,11 @@ func _ready() -> void:
 	env.ambient_light_energy = 0.11
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.glow_enabled = true
-	env.glow_intensity = 0.8
-	env.glow_bloom = 0.1
+	env.glow_intensity = 0.95
+	env.glow_strength = 1.0
+	env.glow_hdr_threshold = 1.1
+	env.glow_hdr_scale = 1.2
+	env.glow_bloom = 0.22
 	env.ssao_enabled = true
 	env.ssao_intensity = 2.0
 	env.ssil_enabled = true
@@ -132,9 +135,9 @@ func _process(_delta: float) -> void:
 
 
 ## Called every frame with the ship floating position.
-func advance_dust(ship_position: Dictionary) -> void:
+func advance_dust(ship_position: Dictionary, velocity: Vector3) -> void:
 	if not _last_ship.is_empty():
-		_dust.advance(IonMath.to_vec3(IonMath.relative(_last_ship, ship_position)), camera.position)
+		_dust.advance(IonMath.to_vec3(IonMath.relative(_last_ship, ship_position)), camera.position, velocity)
 	_last_ship = ship_position
 
 

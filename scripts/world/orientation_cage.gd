@@ -11,8 +11,6 @@ const RING_SEGMENTS := 128
 
 func _ready() -> void:
 	add_child(PointCloud.make(PointCloud.random_sphere_points(STAR_COUNT, STAR_RADIUS_M), PackedColorArray(), 0.25, -1, 1.5))
-	add_child(_ring(Color("2266aa"), true))
-	add_child(_ring(Color("225533"), false))
 
 
 func _ring(color: Color, horizontal: bool) -> MeshInstance3D:

@@ -141,7 +141,7 @@ func _galaxies() -> void:
 		var material := ShaderMaterial.new()
 		material.shader = _galaxy_shader
 		material.set_shader_parameter("tint", palette[i % palette.size()])
-		material.set_shader_parameter("intensity", _rng.randf_range(0.06, 0.12))
+		material.set_shader_parameter("intensity", _rng.randf_range(0.02, 0.045))
 		material.set_shader_parameter("rotation", _rng.randf() * TAU)
 		material.set_shader_parameter("squash", _rng.randf_range(0.3, 0.8))
 		material.set_shader_parameter("twist", _rng.randf_range(3.0, 7.0))

@@ -19,7 +19,7 @@ var _palette: CommandPalette
 var _modal: ModulesModal
 var _login: LoginPanel
 var _ui_root: Control
-var _radar := RadarPoller.new()
+var _radar := RadarHub.new()
 var _system_map := SystemMapPoller.new()
 var _autopilot := Autopilot.new()
 var _modules: Array = []
@@ -196,8 +196,7 @@ func _on_state(entity: Dictionary) -> void:
 
 	var system_module := modules.filter(func(m): return m.type in ModuleTabs.SYSTEM_MAP_TYPES)
 	_system_map.set_module_id(system_module[0].module_id if not system_module.is_empty() else "")
-	var radar_module := modules.filter(func(m): return m.type in ModuleTabs.RADAR_TYPES)
-	_radar.set_module_id(radar_module[0].module_id if not radar_module.is_empty() else "")
+	_radar.sync(entity, modules)
 
 	if ship_position.is_empty():
 		return
@@ -257,7 +256,12 @@ func _render_frame() -> void:
 			orientation = ((orientation as Quaternion) * Quaternion(w.normalized(), w.length() * dt)).normalized()
 		_scene.set_own_ship_orientation(orientation)
 
-	_scene.advance_dust(ship_position)
+	var speed_vec: Vector3 = v + (_snap.accel as Vector3) * dt
+	_scene.advance_dust(ship_position, speed_vec)
+	var own = ShipRead.size(ShipState.latest)
+	var ship_size: float = own if own != null else 30.0
+	var closeness := 1.0 - clampf((_scene.camera.position.length() - ship_size) / (ship_size * 8.0), 0.0, 1.0)
+	_scene.camera.shake = clampf(speed_vec.length() / 600.0, 0.0, 1.0) * closeness
 	var entries := _system_map.latest
 	var contacts := _radar.get_predicted(IonMath.now_ms())
 	_scene.starfield.update(ship_position, entries)
@@ -413,7 +417,7 @@ func _distance_label(position: Dictionary) -> String:
 
 func _show_ship_menu(entity_id: String) -> void:
 	var contact: Variant = null
-	for c in _radar.latest:
+	for c in _radar.get_predicted(IonMath.now_ms()):
 		if c[0] == entity_id:
 			contact = c
 	var radius := float(contact[2]) / 2.0 if contact != null else 0.0

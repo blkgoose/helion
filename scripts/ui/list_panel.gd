@@ -11,7 +11,7 @@ var _rows := {}
 func _init(title: String) -> void:
 	var box := VBoxContainer.new()
 	var heading := Label.new()
-	heading.text = title
+	heading.text = "// " + title.to_upper()
 	heading.add_theme_color_override("font_color", UiTheme.ACCENT)
 	box.add_child(heading)
 	box.add_child(HSeparator.new())

@@ -63,14 +63,14 @@ func _ready() -> void:
 	add_child(top_right)
 
 	var logout := Button.new()
-	logout.text = "Logout"
+	logout.text = "LOGOUT"
 	var buttons := VBoxContainer.new()
 	top_right.add_child(buttons)
 	buttons.add_child(logout)
 	logout.pressed.connect(func(): logout_pressed.emit())
 
 	var stop := Button.new()
-	stop.text = "Full stop"
+	stop.text = "FULL STOP"
 	stop.add_theme_color_override("font_color", Color("ee8888"))
 	stop.pressed.connect(func(): full_stop_pressed.emit())
 	buttons.add_child(stop)
@@ -78,7 +78,7 @@ func _ready() -> void:
 
 	var hint := PanelContainer.new()
 	var hint_label := Label.new()
-	hint_label.text = "[M] Moduli   [Ctrl+K] Comandi"
+	hint_label.text = "[M] MODULI   [CTRL+K] COMANDI"
 	hint.add_child(hint_label)
 	add_child(hint)
 	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
@@ -89,7 +89,7 @@ func _ready() -> void:
 	_autopilot_label = Label.new()
 	row.add_child(_autopilot_label)
 	var disengage := Button.new()
-	disengage.text = "Disengage"
+	disengage.text = "DISENGAGE"
 	disengage.pressed.connect(func(): disengage_pressed.emit())
 	row.add_child(disengage)
 	_autopilot_panel.add_child(row)
