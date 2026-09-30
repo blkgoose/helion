@@ -344,7 +344,7 @@ func _update_panels(ship_position: Dictionary, entries: Array, contacts: Array) 
 	rows.sort_custom(func(a, b): return a.distance < b.distance)
 	var radar_rows: Array = []
 	for r in rows.slice(0, RADAR_PANEL_LIMIT):
-		radar_rows.append({"key": r.id, "stale": r.stale, "text": "%s %s — %.2f km, ⌀ %d m" % [IonMath.contact_icon(r.kind), str(r.id).substr(0, 8), r.distance / 1000.0, roundi(r.size)]})
+		radar_rows.append({"key": r.id, "stale": r.stale, "text": "%s %s — %s, ⌀ %d m" % [IonMath.contact_icon(r.kind), str(r.id).substr(0, 8), IonMath.format_distance(r.distance), roundi(r.size)]})
 	_radar_panel.set_rows(radar_rows)
 
 

@@ -31,6 +31,8 @@ static func to_vec3(v: Array) -> Vector3:
 
 
 static func format_distance(distance_m: float) -> String:
+	if distance_m < 1000.0:
+		return "%d m" % roundi(distance_m)
 	if distance_m < AU_M * 0.01:
 		return "%d km" % roundi(distance_m / 1000.0)
 	if distance_m < LIGHT_YEAR_M * 0.1:
@@ -39,6 +41,8 @@ static func format_distance(distance_m: float) -> String:
 
 
 static func format_distance_short(distance_m: float) -> String:
+	if distance_m < 1000.0:
+		return "%d m" % roundi(distance_m)
 	if distance_m < AU_M * 0.01:
 		return "%d km" % roundi(distance_m / 1000.0)
 	if distance_m < LIGHT_YEAR_M * 0.1:
