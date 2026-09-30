@@ -432,10 +432,15 @@ func tick(entity: Dictionary) -> void:
 				forward = minf(100.0, closing_speed * SPEED_GAIN) if closing_speed > SPEED_DEADBAND else 0.0
 			elif phase == "fineStop" and pointing.angle_deg < ALIGNMENT_TOLERANCE_DEG:
 				var fine_speed_command := closing_speed * SPEED_GAIN if closing_speed > SPEED_DEADBAND else 0.0
+				# 1% is only the floor: a fast approach (e.g. after a long trip) needs the power to
+				# actually shed the speed within the remaining distance.
+				var required_pct := 0.0
+				if closing_speed > SPEED_DEADBAND and remaining > 0.0:
+					required_pct = 100.0 * (closing_speed * closing_speed / (2.0 * remaining)) / decel_estimate * BRAKE_MARGIN
 				if has_retro:
-					retro_forward = minf(100.0, fine_speed_command)
+					retro_forward = minf(100.0, maxf(fine_speed_command, required_pct))
 				else:
-					forward = minf(FINE_STOP_MAIN_ENGINE_CAP_PCT, fine_speed_command)
+					forward = minf(100.0, minf(maxf(FINE_STOP_MAIN_ENGINE_CAP_PCT, required_pct), maxf(fine_speed_command, required_pct)))
 
 	if phase == "burning" or phase == "stopping":
 		_measure_accel(closing_speed, forward, now)
