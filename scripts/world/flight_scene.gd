@@ -56,10 +56,10 @@ class ShipVisual:
 		_bounding.visible = value
 
 	## Cheap to call every frame: a no-op once upgraded, or while the model is still loading.
-	func upgrade() -> void:
+	func upgrade(model_id: String, kind: String = "ship", distance_m: float = 0.0) -> void:
 		if _upgraded:
 			return
-		var model := Models.spawn("ship", radius)
+		var model := Models.spawn(kind, model_id, radius, distance_m)
 		if model == null:
 			return
 		remove_child(_placeholder)
@@ -129,9 +129,9 @@ func _process(_delta: float) -> void:
 	_cage.follow(camera.position)
 	_skybox.follow(camera.position)
 	_deco.position = camera.position
-	_own_ship.upgrade()
-	for contact in _contacts.values():
-		contact.visual.upgrade()
+	_own_ship.upgrade(IonClient.ship_id)
+	for id in _contacts:
+		_contacts[id].visual.upgrade(id, _contacts[id].kind, _contacts[id].node.position.length())
 
 
 ## Called every frame with the ship floating position.
@@ -172,7 +172,7 @@ func sync_contacts(contacts: Array) -> void:
 			var node := Node3D.new()
 			node.add_child(visual)
 			add_child(node)
-			entry = {"node": node, "visual": visual, "radius": radius}
+			entry = {"node": node, "visual": visual, "radius": radius, "kind": contact.kind if contact.kind in Cdn.TYPES else "ship"}
 			_contacts[id] = entry
 		var position: Vector3 = contact.position
 		entry.node.position = position

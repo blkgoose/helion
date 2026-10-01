@@ -1,36 +1,11 @@
 class_name Models
-## Ship/planet/asteroid glTF models, normalized once to a unit bounding sphere (radius 1, centered)
+## CDN glTF models, normalized once to a unit bounding sphere (radius 1, centered)
 ## so every spawn site just uniformly scales to the real radius.
-
-const PATHS := {
-	"ship": "res://assets/models/ship.glb",
-	"planet": "res://assets/models/planet.glb",
-	"asteroid": "res://assets/models/asteroid.glb",
-}
 
 # The ship model's forward axis doesn't match ION's local +X; +90 deg yaw fixes it.
 const FORWARD_FIX := {"ship": Quaternion(Vector3.UP, PI / 2.0)}
 
-static var _scenes := {}
 static var _normalization := {}
-
-
-static func preload_all() -> void:
-	for kind in PATHS:
-		ResourceLoader.load_threaded_request(PATHS[kind])
-
-
-static func _scene(kind: String) -> PackedScene:
-	if _scenes.has(kind):
-		return _scenes[kind]
-	var path: String = PATHS[kind]
-	match ResourceLoader.load_threaded_get_status(path):
-		ResourceLoader.THREAD_LOAD_LOADED:
-			_scenes[kind] = ResourceLoader.load_threaded_get(path)
-			return _scenes[kind]
-		ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-			ResourceLoader.load_threaded_request(path)
-	return null
 
 
 static func _collect_aabb(node: Node, xform: Transform3D, box: Array) -> void:
@@ -44,30 +19,28 @@ static func _collect_aabb(node: Node, xform: Transform3D, box: Array) -> void:
 		_collect_aabb(child, t, box)
 
 
-static func _normalization_for(kind: String, scene: PackedScene) -> Dictionary:
-	if _normalization.has(kind):
-		return _normalization[kind]
-	var probe: Node = scene.instantiate()
+static func _normalization_for(key: String, scene: Node) -> Dictionary:
+	if _normalization.has(key):
+		return _normalization[key]
 	var box: Array = [null]
-	_collect_aabb(probe, Transform3D.IDENTITY, box)
-	probe.free()
+	_collect_aabb(scene, Transform3D.IDENTITY, box)
 	var result := {"scale": 1.0, "center": Vector3.ZERO}
 	if box[0] != null:
 		var aabb: AABB = box[0]
 		var radius := aabb.size.length() / 2.0
 		if radius > 0.0:
 			result = {"scale": 1.0 / radius, "center": aabb.get_center()}
-	_normalization[kind] = result
+	_normalization[key] = result
 	return result
 
 
-## A model of `kind` scaled to bounding-sphere radius `radius`, or null while it is still loading.
-static func spawn(kind: String, radius: float) -> Node3D:
-	var scene := _scene(kind)
+## The CDN model of `kind` for entity `id` scaled to bounding-sphere radius `radius`, or null while it downloads.
+static func spawn(kind: String, id: String, radius: float, distance_m: float = 0.0) -> Node3D:
+	var scene := Cdn.get_model(kind, id, distance_m)
 	if scene == null:
 		return null
-	var norm := _normalization_for(kind, scene)
-	var model: Node3D = scene.instantiate()
+	var norm := _normalization_for("%s:%s" % [kind, id], scene)
+	var model: Node3D = scene.duplicate()
 	var s: float = norm.scale
 	model.scale = Vector3.ONE * s
 	model.position = model.position - (norm.center as Vector3) * s
@@ -79,5 +52,11 @@ static func spawn(kind: String, radius: float) -> Node3D:
 	return wrapper
 
 
-static func is_ready(kind: String) -> bool:
-	return _scene(kind) != null
+## Also keeps the download queued (and its distance fresh) while the model is not there yet.
+static func is_ready(kind: String, id: String, distance_m: float = 0.0) -> bool:
+	return Cdn.get_model(kind, id, distance_m) != null
+
+
+## SystemMap entries carry a stable UUID v5 `id` (kind, id, position, diameter_m, mass_kg); it matches the CDN id pattern as is.
+static func body_id(entry: Dictionary) -> String:
+	return str(entry.id)

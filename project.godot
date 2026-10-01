@@ -10,6 +10,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
 
+Cdn="*res://scripts/cdn_client.gd"
 IonClient="*res://scripts/ion_client.gd"
 ShipState="*res://scripts/ship_state.gd"
 

@@ -9,13 +9,13 @@ signal manual_pressed
 
 const PHASE_LABELS := {
 	"idle": "",
-	"tuning": "Calibrazione RCS…",
-	"pointing": "Puntamento",
-	"burning": "Accelerazione",
-	"stoppingBurner": "Arresto propulsore",
-	"reverse": "Inversione di rotta",
-	"stopping": "Frenata",
-	"fineStop": "Frenata di precisione",
+	"tuning": "RCS calibration…",
+	"pointing": "Pointing",
+	"burning": "Accelerating",
+	"stoppingBurner": "Thruster cutoff",
+	"reverse": "Flip",
+	"stopping": "Braking",
+	"fineStop": "Fine braking",
 }
 
 var _status_label: RichTextLabel
@@ -72,7 +72,7 @@ func _ready() -> void:
 	logout.pressed.connect(func(): logout_pressed.emit())
 
 	_manual_button = Button.new()
-	_manual_button.text = "MANUALE [T]"
+	_manual_button.text = "MANUAL [T]"
 	_manual_button.pressed.connect(func(): manual_pressed.emit())
 	buttons.add_child(_manual_button)
 
@@ -85,7 +85,7 @@ func _ready() -> void:
 
 	var hint := PanelContainer.new()
 	var hint_label := Label.new()
-	hint_label.text = "[M] MODULI   [CTRL+K] COMANDI"
+	hint_label.text = "[M] MODULES   [CTRL+K] COMMANDS"
 	hint.add_child(hint_label)
 	add_child(hint)
 	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 16)

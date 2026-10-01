@@ -136,7 +136,7 @@ func _render_list() -> void:
 		_clear_detail()
 		if _listed.is_empty():
 			var empty := Label.new()
-			empty.text = "Nessun modulo in questa categoria."
+			empty.text = "No modules in this category."
 			_detail.add_child(empty)
 	else:
 		_list.select(selected_index)
@@ -158,7 +158,7 @@ func _clear_detail() -> void:
 func _show_detail(module_id: String) -> void:
 	_clear_detail()
 	var loading := Label.new()
-	loading.text = "Caricamento..."
+	loading.text = "Loading..."
 	_detail.add_child(loading)
 	_manifest_token += 1
 	var token := _manifest_token
@@ -187,7 +187,7 @@ func _build_manifest(m: Dictionary) -> void:
 	_detail.add_child(desc)
 	var health_row := HBoxContainer.new()
 	var health_label := Label.new()
-	health_label.text = "Salute  "
+	health_label.text = "Health  "
 	_health = Label.new()
 	_health.text = "%d%%" % float(m.get("health_pct", 0))
 	health_row.add_child(health_label)
@@ -241,7 +241,7 @@ func _build_manifest(m: Dictionary) -> void:
 			controls.add_child(edit)
 			inputs.append(edit)
 		var run := Button.new()
-		run.text = "Esegui"
+		run.text = "Run"
 		run.pressed.connect(func():
 			var params := PackedStringArray()
 			for edit in inputs:
@@ -294,7 +294,7 @@ static func _format_variable(v: Dictionary) -> String:
 # Cargo slots are externally-tagged Rust enums: {"Unit":["Iron",5]}, {"Weight":[..]}, {"Volume":[..]}.
 static func _format_cargo(slots) -> String:
 	if not (slots is Array) or slots.is_empty():
-		return "Vuoto"
+		return "Empty"
 	var lines := PackedStringArray()
 	for item in slots:
 		var text := JSON.stringify(item)
@@ -302,7 +302,7 @@ static func _format_cargo(slots) -> String:
 			var variant: String = item.keys()[0]
 			var payload = item[variant]
 			if payload is Array and payload.size() == 2:
-				var unit := {"Unit": "unità", "Weight": "kg", "Volume": "m³"}.get(variant, "") as String
+				var unit := {"Unit": "units", "Weight": "kg", "Volume": "m³"}.get(variant, "") as String
 				var amount: String = str(int(payload[1])) if variant == "Unit" else "%.2f" % float(payload[1])
 				text = "%s: %s %s" % [payload[0], amount, unit]
 		lines.append("• " + text)

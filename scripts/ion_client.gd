@@ -6,7 +6,7 @@ signal disconnected
 const REQUEST_TIMEOUT_S := 8.0
 const DISCONNECT_THRESHOLD := 3
 
-var server_url: String = "http://192.168.1.4:3001/api/v1"
+const SERVER_URL: String = "http://aletflix.duckdns.org:3001/api/v1"
 var token: String = ""
 var ship_id: String = ""
 
@@ -96,7 +96,7 @@ func _send(command: String, with_token: bool) -> Dictionary:
 	add_child(http)
 
 	var body := JSON.stringify({"token": token if with_token else null, "command": command})
-	var err := http.request(server_url, ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	var err := http.request(SERVER_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 	if err != OK:
 		http.queue_free()
 		return _error("Network error for command: %s" % command)

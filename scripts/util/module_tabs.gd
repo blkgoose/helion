@@ -3,11 +3,11 @@ class_name ModuleTabs
 const ORDER := ["cargo", "propulsion", "armaments", "crafting", "docking", "hull"]
 const LABELS := {
 	"cargo": "Cargo & Storage",
-	"propulsion": "Spostamento",
-	"armaments": "Armamenti",
+	"propulsion": "Propulsion",
+	"armaments": "Armaments",
 	"crafting": "Crafting",
 	"docking": "Docking",
-	"hull": "Scafo",
+	"hull": "Hull",
 }
 const CRAFTING := ["Assembler", "ChemicalAssembler", "ColdForge", "FDMPrinter", "Furnace", "HydraulicPress", "PCBMaker", "PhotolithographyScanner", "Polymerizer", "Shaper", "SheetMaker", "Smelter", "TubeWelder", "WaferSlicer", "WireExtruder", "WireWinder"]
 const PROPULSION := ["LightThruster", "StandardThruster", "CapitalThruster", "RcsThruster", "SteeringThruster", "FuelCell"]

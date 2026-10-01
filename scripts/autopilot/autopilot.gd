@@ -338,7 +338,7 @@ func tick(entity: Dictionary) -> void:
 			return
 		var target_position: Dictionary = _get_target.call(now)
 		if target_position.is_empty():
-			_disengage_with_reason("Bersaglio perso")
+			_disengage_with_reason("Target lost")
 			return
 		var rel := IonMath.relative(ship_position, target_position)
 		var distance_to_center := IonMath.length(rel)

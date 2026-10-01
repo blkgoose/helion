@@ -21,7 +21,7 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 6)
 	add_child(box)
 	var title := Label.new()
-	title.text = "// MANUALE  [T]   [P] PRIMA PERSONA"
+	title.text = "// MANUAL  [T]   [P] FIRST PERSON"
 	title.add_theme_color_override("font_color", Color("ffb347"))
 	box.add_child(title)
 
@@ -48,14 +48,14 @@ func _ready() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
 	box.add_child(row)
-	row.add_child(_cluster("ROT", [["Q", KEY_Q, "roll-"], ["W", KEY_W, "muso"], ["E", KEY_E, "roll+"]], [["A", KEY_A, "lato"], ["S", KEY_S, "muso"], ["D", KEY_D, "lato"]]))
+	row.add_child(_cluster("ROT", [["Q", KEY_Q, "roll-"], ["W", KEY_W, "nose"], ["E", KEY_E, "roll+"]], [["A", KEY_A, "side"], ["S", KEY_S, "nose"], ["D", KEY_D, "side"]]))
 	var thrust := VBoxContainer.new()
 	thrust.add_theme_constant_override("separation", 4)
 	var thrust_title := Label.new()
 	thrust_title.text = "THRUST"
 	thrust.add_child(thrust_title)
-	thrust.add_child(_cap("K", KEY_K, "su"))
-	thrust.add_child(_cap("J", KEY_J, "giù"))
+	thrust.add_child(_cap("K", KEY_K, "up"))
+	thrust.add_child(_cap("J", KEY_J, "down"))
 	_thrust_label = Label.new()
 	thrust.add_child(_thrust_label)
 	row.add_child(thrust)

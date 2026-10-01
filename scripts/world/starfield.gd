@@ -71,13 +71,13 @@ func update(ship_position: Dictionary, entries: Array) -> void:
 		var hit_radius: float
 
 		if is_near:
-			var model_kind := "asteroid" if kind == "asteroid" else "planet"
-			if node != null and node.has_meta("fallback") and not is_star and Models.is_ready(model_kind):
+			var body_id := Models.body_id(entry)
+			if node != null and node.has_meta("fallback") and Models.is_ready(kind, body_id, distance):
 				node.queue_free()
 				node = null
 				_nodes.erase(key)
 			if node == null:
-				node = _build_near(kind, is_star, real_radius, model_kind)
+				node = _build_near(kind, is_star, real_radius, body_id, distance)
 				add_child(node)
 				_nodes[key] = node
 			position = direction * distance
@@ -86,13 +86,13 @@ func update(ship_position: Dictionary, entries: Array) -> void:
 		else:
 			var stand_in := SKY_RADIUS_M * (1.0 if is_star else 0.85)
 			var visual_radius := maxf(MIN_VISUAL_RADIUS_M, (real_radius / distance) * stand_in)
-			var proxy_model := "asteroid" if kind == "asteroid" else "planet"
-			if node != null and node.has_meta("fallback") and not is_star and Models.is_ready(proxy_model):
+			var body_id := Models.body_id(entry)
+			if node != null and node.has_meta("fallback") and not is_star and Models.is_ready(kind, body_id, distance):
 				node.queue_free()
 				node = null
 				_nodes.erase(key)
 			if node == null:
-				node = _build_proxy(is_star, proxy_model)
+				node = _build_proxy(kind, is_star, body_id, distance)
 				add_child(node)
 				_nodes[key] = node
 			if is_star:
@@ -131,13 +131,12 @@ func update(ship_position: Dictionary, entries: Array) -> void:
 		_light.light_energy = 0.0
 
 
-func _build_near(kind: String, is_star: bool, real_radius: float, model_kind: String) -> Node3D:
-	if not is_star:
-		var model := Models.spawn(model_kind, real_radius)
-		if model != null:
-			if kind == "planet":
-				_add_atmosphere(model, 1.0)
-			return model
+func _build_near(kind: String, is_star: bool, real_radius: float, body_id: String, distance: float) -> Node3D:
+	var model := Models.spawn(kind, body_id, real_radius, distance)
+	if model != null:
+		if kind == "planet":
+			_add_atmosphere(model, 1.0)
+		return model
 	# DoubleSide: "arrived" only needs distance-to-surface under the arrival radius, so the camera
 	# can already be inside the sphere, and default backface culling would make it vanish.
 	var material := StandardMaterial3D.new()
@@ -159,11 +158,11 @@ func _build_near(kind: String, is_star: bool, real_radius: float, model_kind: St
 	return instance
 
 
-func _build_proxy(is_star: bool, model_kind: String) -> Node3D:
+func _build_proxy(kind: String, is_star: bool, body_id: String, distance: float) -> Node3D:
 	if not is_star:
-		var model := Models.spawn(model_kind, 1.0)
+		var model := Models.spawn(kind, body_id, 1.0, distance)
 		if model != null:
-			if model_kind == "planet":
+			if kind == "planet":
 				_add_atmosphere(model, 1.0)
 			return model
 	var instance := MeshInstance3D.new()

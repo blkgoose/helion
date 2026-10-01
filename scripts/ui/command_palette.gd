@@ -75,7 +75,7 @@ func is_open() -> bool:
 
 
 func open() -> void:
-	_open_with([{"title": "Comandi", "items": _root_items.call()}])
+	_open_with([{"title": "Commands", "items": _root_items.call()}])
 
 
 func open_list(title: String, items: Array) -> void:
@@ -223,11 +223,11 @@ func _render() -> void:
 
 	_list.clear()
 	if _frame().items == null:
-		_list.add_item("Caricamento…", null, false)
+		_list.add_item("Loading…", null, false)
 		return
 	_shown = _filtered()
 	if _shown.is_empty():
-		_list.add_item("Nessun risultato.", null, false)
+		_list.add_item("No results.", null, false)
 		return
 	for i in _shown.size():
 		var item: Dictionary = _shown[i]

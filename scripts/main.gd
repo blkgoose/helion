@@ -37,7 +37,6 @@ var _snap := {}
 
 
 func _ready() -> void:
-	Models.preload_all()
 	_scene = FlightScene.new()
 	add_child(_scene)
 	add_child(_radar)
@@ -78,11 +77,11 @@ func _ready() -> void:
 	_minimap = Minimap.new()
 	left_column.add_child(_minimap)
 	bottom.add_child(left_column)
-	_system_panel = ListPanel.new("Sistema stellare")
+	_system_panel = ListPanel.new("Star system")
 	_system_panel.size_flags_vertical = Control.SIZE_SHRINK_END
 	_system_panel.row_selected.connect(_on_system_row)
 	bottom.add_child(_system_panel)
-	_radar_panel = ListPanel.new("Contatti radar")
+	_radar_panel = ListPanel.new("Radar contacts")
 	_radar_panel.size_flags_vertical = Control.SIZE_SHRINK_END
 	_radar_panel.row_selected.connect(func(key): _show_ship_menu(key))
 	bottom.add_child(_radar_panel)
@@ -104,7 +103,7 @@ func _ready() -> void:
 	_ui_root.add_child(_login)
 	_login.logged_in.connect(_start_game)
 
-	_autopilot.failed.connect(func(reason): _hud.notify("Autopilota disattivato: %s" % reason))
+	_autopilot.failed.connect(func(reason): _hud.notify("Autopilot disengaged: %s" % reason))
 	ShipState.updated.connect(_on_state)
 	IonClient.disconnected.connect(_on_disconnected)
 
@@ -144,7 +143,7 @@ func _on_disconnected() -> void:
 	banner.color = Color(0, 0, 0, 0.75)
 	banner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var label := Label.new()
-	label.text = "Sessione scaduta — riconnessione…"
+	label.text = "Session expired — reconnecting…"
 	label.add_theme_color_override("font_color", Color("ee8888"))
 	label.add_theme_font_size_override("font_size", 20)
 	banner.add_child(label)
@@ -355,7 +354,7 @@ func _update_panels(ship_position: Dictionary, entries: Array, contacts: Array) 
 		var is_star: bool = b.entry.kind == "star"
 		system_rows.append({
 			"key": "%d:%s" % [b.index, b.entry.kind],
-			"text": "%s %s — %s, ⌀ %d km, %s" % ["☉" if is_star else "●", "stella" if is_star else "pianeta", IonMath.format_distance(b.distance), roundi(float(b.entry.diameter_m) / 1000.0), IonMath.format_mass(float(b.entry.mass_kg))],
+			"text": "%s %s — %s, ⌀ %d km, %s" % ["☉" if is_star else "●", "star" if is_star else "planet", IonMath.format_distance(b.distance), roundi(float(b.entry.diameter_m) / 1000.0), IonMath.format_mass(float(b.entry.mass_kg))],
 		})
 	_system_panel.set_rows(system_rows)
 
@@ -505,17 +504,17 @@ func _show_ship_menu(entity_id: String) -> void:
 	if not controller.is_empty():
 		items.append({"label": "Dock", "node": {"kind": "run", "run": func(): _dock(controller[0].module_id, entity_id)}})
 		items.append({"label": "Undock", "node": {"kind": "run", "run": func(): _undock(controller[0].module_id)}})
-	_palette.open_list("Nave %s%s" % [short, _distance_label(contact[1]) if contact != null else ""], items)
+	_palette.open_list("Ship %s%s" % [short, _distance_label(contact[1]) if contact != null else ""], items)
 
 
 func _dock(module_id: String, target_id: String) -> void:
 	var result := await IonClient.action(module_id, "dock", PackedStringArray([target_id]))
-	_hud.notify("Docking avviato" if result.ok else "Docking fallito: %s" % result.error)
+	_hud.notify("Docking started" if result.ok else "Docking failed: %s" % result.error)
 
 
 func _undock(module_id: String) -> void:
 	var result := await IonClient.action(module_id, "exit")
-	_hud.notify("Uscita dal dock richiesta" if result.ok else "Uscita fallita: %s" % result.error)
+	_hud.notify("Undock requested" if result.ok else "Undock failed: %s" % result.error)
 
 
 func _show_body_menu(entry_index: int, kind: String) -> void:
@@ -551,7 +550,7 @@ func _build_navigation_items() -> Array:
 			continue
 		var d := IonMath.length(IonMath.relative(ship_position, e.position))
 		var kind: String = e.kind
-		out.append({"d": d, "label": "%s %s — %s" % ["☉" if kind == "star" else "●", "stella" if kind == "star" else "pianeta", IonMath.format_distance(d)],
+		out.append({"d": d, "label": "%s %s — %s" % ["☉" if kind == "star" else "●", "star" if kind == "star" else "planet", IonMath.format_distance(d)],
 			"open": func(): _show_body_menu(i, kind)})
 	for c in _radar.get_predicted(IonMath.now_ms()):
 		var d := IonMath.length(IonMath.relative(ship_position, c[1]))
@@ -618,12 +617,12 @@ func _build_palette_root() -> Array:
 	var propulsion_label: String = ModuleTabs.LABELS["propulsion"]
 	var engaged := _autopilot.is_engaged()
 	var extra: Array = [
-		{"label": "Ferma autopilota" if engaged else "Nessuna manovra attiva", "node": {"kind": "run", "run": _disengage} if engaged else {"kind": "info"}},
+		{"label": "Stop autopilot" if engaged else "No active maneuver", "node": {"kind": "run", "run": _disengage} if engaged else {"kind": "info"}},
 		{"label": "Full stop", "node": {"kind": "run", "run": func(): _engage({"kind": "stop"})}},
 	]
 	if not groups.has(propulsion_label):
 		groups[propulsion_label] = []
-	var items: Array = [{"label": "Naviga", "node": {"kind": "list", "load": _build_navigation_items}}]
+	var items: Array = [{"label": "Navigate", "node": {"kind": "list", "load": _build_navigation_items}}]
 	for label in groups:
 		items.append(_module_group_item(label, groups[label], extra if label == propulsion_label else []))
 	return items

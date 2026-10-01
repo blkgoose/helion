@@ -23,7 +23,7 @@ func _init() -> void:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_heading = Label.new()
-	_heading.text = "// MAPPA DEL SISTEMA — clicca un corpo per impostare un viaggio, rotella avanti per uscire"
+	_heading.text = "// SYSTEM MAP — click a body to set a course, scroll forward to exit"
 	_heading.add_theme_color_override("font_color", UiTheme.ACCENT)
 	_heading.position = Vector2(24, 60)
 	add_child(_heading)

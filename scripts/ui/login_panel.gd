@@ -19,8 +19,6 @@ func _ready() -> void:
 	box.custom_minimum_size = Vector2(360, 0)
 	_panel.add_child(box)
 
-	var env_url := OS.get_environment("ION_SERVER_URL")
-	_add_field(box, "server", "Server", env_url if env_url != "" else IonClient.server_url, false)
 	_add_field(box, "ship", "Ship ID", "", false)
 	_add_field(box, "component", "Component", "core", false)
 	_add_field(box, "password", "Password", "", true)
@@ -35,7 +33,7 @@ func _ready() -> void:
 	_apply_cli_args()
 
 
-## CLI: --server URL --ship ID --component C --password P, or --login "id component password"
+## CLI: --ship ID --component C --password P, or --login "id component password"
 ## (also --key=value). With all credentials present it logs in automatically.
 func _apply_cli_args() -> void:
 	var args := OS.get_cmdline_args() + OS.get_cmdline_user_args()
@@ -77,8 +75,7 @@ func _add_field(parent: Control, key: String, label_text: String, value: String,
 	edit.text = value
 	edit.secret = secret
 	edit.text_submitted.connect(func(_t): submit())
-	if key != "server":
-		edit.text_changed.connect(_on_credential_text_changed)
+	edit.text_changed.connect(_on_credential_text_changed)
 	parent.add_child(edit)
 	_fields[key] = edit
 
@@ -105,7 +102,6 @@ func _on_credential_text_changed(text: String) -> void:
 
 
 func submit() -> void:
-	IonClient.server_url = _fields.server.text.strip_edges()
 	_status.text = "Connecting..."
 	var result := await IonClient.login(
 		_fields.ship.text.strip_edges(),
