@@ -8,10 +8,9 @@ extends RefCounted
 signal failed(reason: String)
 
 const RAD_TO_DEG := 180.0 / PI
-const MAX_CALIBRATION_ATTEMPTS := 4
 const TIMING_SMOOTHING := 0.2
 # Bump when the probe method changes so stale cached gains are re-measured.
-const CALIBRATION_VERSION := 2
+const CALIBRATION_VERSION := 3
 const ALIGNMENT_TOLERANCE_DEG := 25.0
 const DEFAULT_MAX_CRUISE_SPEED := 1000.0
 const SPEED_GAIN := 20.0
@@ -49,7 +48,8 @@ var _arrival_radius := 200.0
 var _target_radius := 0.0
 var _stop_mode := false
 var _calibrator := Attitude.RcsCalibrator.new()
-var _calibration_attempts := 0
+# Latched when an RCS axis never responds; cleared only when the RCS loadout changes.
+var _rcs_offline := false
 var _gains: Variant = null
 var _point_only := false
 var _max_cruise_speed := DEFAULT_MAX_CRUISE_SPEED
@@ -90,6 +90,7 @@ func set_modules(modules: Array, entity: Variant) -> void:
 	var rcs_ids := ",".join(ids)
 	if rcs_ids != _rcs_ids:
 		_rcs_ids = rcs_ids
+		_rcs_offline = false
 		if is_engaged() and not _try_use_cached_calibration():
 			_start_calibration()
 
@@ -123,7 +124,6 @@ func _persist_calibration() -> void:
 
 func _start_calibration() -> void:
 	_gains = null
-	_calibration_attempts += 1
 	phase = "tuning"
 	Persist.set_value("phase", "tuning")
 	_calibrator.start(IonMath.now_ms())
@@ -192,10 +192,12 @@ func _reset_for_engage() -> void:
 	_last_command = {"yaw": 0.0, "pitch": 0.0, "roll": 0.0}
 	_sent.clear()
 	_zero_pending = false
-	_calibration_attempts = 0
 	_settled_since_ms = null
 	_prev_accel_sample_at_ms = 0.0
 	_prev_forward = 0.0
+	if _rcs_offline:
+		_disengage_with_reason("RCS offline")
+		return
 	if not _try_use_cached_calibration():
 		_start_calibration()
 
@@ -359,7 +361,7 @@ func tick(entity: Dictionary) -> void:
 	var has_retro: bool = _thrusters.retro.size() > 0
 
 	if phase == "tuning":
-		_calibrator.record(now, rates)
+		_calibrator.record(now, rates, orientation)
 
 	# Ticks are fired without awaiting, so skip while the previous SETs are in flight.
 	if _in_flight:
@@ -379,11 +381,11 @@ func tick(entity: Dictionary) -> void:
 				_gains = gains
 				_persist_calibration()
 				_enter_phase("reverse" if _stop_mode else "pointing", now)
-			elif _calibration_attempts < MAX_CALIBRATION_ATTEMPTS:
-				_start_calibration()
 			else:
-				push_warning("Autopilot: RCS calibration failed, yaw/pitch did not respond consistently")
-				_disengage_with_reason("Calibrazione RCS fallita")
+				_rcs_offline = true
+				var offline_axes := ", ".join(PackedStringArray(_calibrator.offline_axes()))
+				push_warning("Autopilot: RCS offline, no response on: %s" % offline_axes)
+				_disengage_with_reason("RCS offline (%s)" % offline_axes)
 				return
 	else:
 		# State-exit checks use the CURRENT (pre-transition) phase's aim direction.
